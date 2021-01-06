@@ -4,7 +4,7 @@
 
 #include "calculator.h"
 
-Calculator::init()
+void Calculator::init()
 {
     // TODO
 }
@@ -26,3 +26,5 @@ int Calculator::opp_potential_power(int *holes, int *pubs, int step)
 {
     // TODO
 }
+
+Calculator calculator;

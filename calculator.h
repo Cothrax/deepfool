@@ -5,6 +5,9 @@
 #ifndef DEEPFOOL_CALCULATOR_H
 #define DEEPFOOL_CALCULATOR_H
 
+typedef long long ll;
+#define POWER_RANGE 1000 // TODO
+
 // 花色
 // 牌的编码为 (花色*13 + 数字)，范围[0, 51]
 #define SPADE 0
@@ -31,5 +34,7 @@ public:
     // 底牌 holes, step张公共牌 pubs
     int opp_potential_power(int *holes, int *pubs, int step);
 };
+
+extern Calculator calculator;
 
 #endif //DEEPFOOL_CALCULATOR_H

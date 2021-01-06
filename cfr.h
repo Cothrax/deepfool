@@ -7,19 +7,20 @@
 
 #include "game.h"
 #include "oracle.h"
+#include <vector>
+using std::vector;
+using std::pair;
 
 #define SEED 5555
 
 class CFR {
 private:
     Oracle *_oracle;
-    vector<InfoSet> info_buf;
-    vector<Strategy> strategy_buf;
 
 public:
-    CFR(Oracle *oracle, bool need_learn);
-    void cfr(InfoSet &info, Game &game, double *pi, double *util);
-    parallel_cfr();
+    CFR(Oracle *oracle);
+    void cfr(InfoSet &info, Game &game, vector<pair<int, int>> &history, double *pi, double *util, int dep);
+    // void parallel_cfr();
     void train(int iter);
 };
 
