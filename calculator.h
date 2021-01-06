@@ -5,8 +5,13 @@
 #ifndef DEEPFOOL_CALCULATOR_H
 #define DEEPFOOL_CALCULATOR_H
 
+#include <unordered_map>
+using std::unordered_map;
 typedef long long ll;
-#define POWER_RANGE 1000 // TODO
+typedef unsigned long long ull;
+#define POWER_RANGE  1000 // TODO
+#define MAX_POWER    9175040
+#define MC_ITER      200
 
 // 花色
 // 牌的编码为 (花色*13 + 数字)，范围[0, 51]
@@ -17,9 +22,15 @@ typedef long long ll;
 #define HEART 3
 
 class Calculator {
+    bool mask[52];
+    int cards[52];
+
 private:
     // 你也许需要初始化一些东西？
     void init();
+    unordered_map<ull, int> pp_cache;
+    unordered_map<ull, int> opp_cache;
+
 public:
     Calculator() { init(); }
 
@@ -29,14 +40,13 @@ public:
     int power(int *holes, int *pubs);
 
     // 玩家的先验期望牌力
-    // 底牌 holes, step张公共牌 pubs
-    // undone
+    // 阶段 step (game.h)
     int potential_power(int *holes, int *pubs, int step);
 
     // 任一对手的先验期望牌力
-    // 底牌 holes, step张公共牌 pubs
-    // undone
+    // 阶段 step (game.h)
     int opp_potential_power(int *holes, int *pubs, int step);
+
 };
 
 extern Calculator calculator;

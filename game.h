@@ -12,11 +12,11 @@
 
 #define FOLD 0
 #define CHECK 1
-#define RAISE_3BB 2
-#define RAISE_HALF_POT 3
-#define RAISE_2POT 4
-#define RAISE_POT 5
-#define ALL_IN 6
+#define RAISE_QUARTER_POT 6
+#define RAISE_HALF_POT 2
+#define RAISE_POT 4
+#define RAISE_2POT 3
+#define ALL_IN 5
 #define NUM_ACTION 7
 
 
@@ -64,6 +64,7 @@ struct Game
 
 
 #define NO_CHANGE 0
+#define PRE_FLOP 0
 #define FLOP 1
 #define TURN 2
 #define RIVER 3

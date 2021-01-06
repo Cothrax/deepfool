@@ -4,6 +4,8 @@
 
 #include "cfr.h"
 #include <cstdlib>
+#include <cmath>
+#include <cassert>
 
 extern long long debug_counter;
 extern int debug_max_dep;
@@ -18,7 +20,7 @@ void CFR::cfr(InfoSet &info, Game &game, vector<pair<int, int>> &history, double
 {
     debug_max_dep = std::max(debug_max_dep, dep);
     debug_counter++;
-    if(dep > 150)
+    if(debug_counter == 10000000)
     {
         for(auto i: history)
         {
@@ -31,10 +33,9 @@ void CFR::cfr(InfoSet &info, Game &game, vector<pair<int, int>> &history, double
                    i.second == 5 ? "2POT" :
                    "ALL_IN");
         }
-
     }
 
-    if(debug_counter % 100000 == 0)
+    if(debug_counter % 1000000 == 0)
     {
         printf("debug_counter = %lld, dep = %d\n", debug_counter, dep);
         printf("step = %d, player = %d, pot = %d\n"
@@ -79,7 +80,7 @@ void CFR::cfr(InfoSet &info, Game &game, vector<pair<int, int>> &history, double
         history.pop_back();
         std::swap(pi[info.player], tmp);
 
-        for(int i = 0; i < NUM_PLAYER; i++) util[i] /= cur[a];
+        //for(int i = 0; i < NUM_PLAYER; i++) util[i] /= cur[a];
     }
     else
     {
@@ -104,10 +105,14 @@ void CFR::cfr(InfoSet &info, Game &game, vector<pair<int, int>> &history, double
             for(int i = 0; i < NUM_PLAYER; i++) util[i] += next_util[i] * cur[a];
         }
 
+        double s = 0;
+        for(int i = 0; i < NUM_PLAYER; i++) s += util[i];
+        assert(fabs(s) < 1e-2);
+
         double fac = 1; // pi_{-i}^sigma
         for(int i = 0; i < NUM_PLAYER; i++) if(i != game.pov) fac *= pi[i];
         for(int a = 0; a < NUM_ACTION; a++) regret[a] = fac * (cv_util[a] - util[a]);
-        // _oracle->update(game, node, regret);
+         _oracle->update(game, node, regret);
     }
 }
 
@@ -120,11 +125,18 @@ void CFR::train(int iter)
 
     for(int i = 0; i < iter; i++)
     {
+        debug_counter = 0;
+        debug_max_dep = 0;
+
         int start = rand()%NUM_PLAYER, pov = rand()%NUM_PLAYER;
         game.generate(start, pov);
         InfoSet info(game);
 
         std::fill(pi, pi+NUM_PLAYER, 1);
         cfr(info, game, history, pi, util, 0);
+
+        printf("iter %d: ", i);
+        for(int j = 0; j < NUM_PLAYER; j++) printf("%.3lf ", util[j]);
+        printf("\ncnt = %lld, max_dep = %d\n", debug_counter, debug_max_dep);
     }
 }

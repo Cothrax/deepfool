@@ -7,6 +7,9 @@
 #include <algorithm>
 #include <cmath>
 #include <random>
+#include <cassert>
+
+#define decomp(x) ((x)/13+'a'),(x%13)
 
 InfoSet::InfoSet(Game &game)
 {
@@ -14,7 +17,8 @@ InfoSet::InfoSet(Game &game)
     memcpy(chips, game.chips, sizeof(chips));
     memset(folds, 0, sizeof(folds));
     memset(bets, 0, sizeof(bets));
-    pot = SMALL_BLIND_CHIP + BIG_BLIND_CHIP;
+    pot = 0;
+//    pot = SMALL_BLIND_CHIP + BIG_BLIND_CHIP;
 
     bets[game.start] = SMALL_BLIND_CHIP;
     bets[game.big_blind] = BIG_BLIND_CHIP;
@@ -46,13 +50,22 @@ void Game::generate(int start_, int pov_)
         power[i] = calculator.power(holes[i], pubs);
 
     printf("gen game: start = %d, pov = %d\n\tholes: ", start_, pov_);
-    for(int i = 0; i < NUM_PLAYER; i++) printf("(%d, %d), ", holes[i][0], holes[i][1]);
-    printf("\n\tpubs:(%d, %d, %d)\n", pubs[0], pubs[1], pubs[2]);
+    for(int i = 0; i < 1; i++) printf("(<%c:%d>, <%c:%d>), ", decomp(holes[i][0]), decomp(holes[i][1]));
+    printf("\n");
+//    printf("\n\tpubs:(<%c:%d>, <%c:%d>, <%c:%d>)\n",
+//            decomp(pubs[0]),
+//            decomp(pubs[1]),
+//            decomp(pubs[2]));
 }
 
 int Game::change_state(InfoSet &info)
 {
-    if(info.num == 1) return GAME_OVER;
+    if(info.num == 1)
+    {
+        for(int bet : info.bets) info.pot += bet;
+        memset(info.bets, 0, sizeof(info.bets));
+        return GAME_OVER;
+    }
     int i, lst_bet = -1;
     for(i = 0; i < NUM_PLAYER; i++)
         if(!info.folds[i])
@@ -64,6 +77,20 @@ int Game::change_state(InfoSet &info)
     info.player = big_blind;
     for(int bet : info.bets) info.pot += bet;
     memset(info.bets, 0, sizeof(info.bets));
+
+    switch(info.step)
+    {
+        case PRE_FLOP: printf("flop: <%c:%d>, <%c:%d>, <%c:%d>\n",
+                              decomp(pubs[0]), decomp(pubs[1]), decomp(pubs[2])); break;
+        case FLOP: printf("turn: <%c:%d>\n", decomp(pubs[3])); break;
+        case TURN: printf("river: <%c:%d>\n", decomp(pubs[4])); break;
+        case RIVER:
+            printf("holes: \n");
+            for(int j = 0; j < NUM_PLAYER; j++) printf("\t%d: <%c:%d>, <%c:%d>\n", j,
+                    decomp(holes[i][0]), decomp(holes[i][1]));
+            break;
+    }
+
     return ++info.step;
 }
 
@@ -75,9 +102,12 @@ void Game::calc_result(InfoSet &info, double *util)
     for(int i = 0; i < NUM_PLAYER; i++)
         cnt += !info.folds[i] && power[i] == maxv;
 
+    int rem = info.pot % cnt;
     for(int i = 0; i < NUM_PLAYER; i++)
-        if(!info.folds[i] && power[i] == maxv) util[i] = info.pot / cnt;
-        else util[i] = chips[i] - info.chips[i];
+    {
+        util[i] = info.chips[i] - chips[i];
+        if(!info.folds[i] && power[i] == maxv) util[i] += info.pot / cnt + rem, rem = 0;
+    }
 }
 
 void Game::act(InfoSet &info, int action, InfoSet &next_info)
@@ -97,7 +127,7 @@ void Game::act(InfoSet &info, int action, InfoSet &next_info)
     switch(action) {
         case FOLD: next_info.folds[info.player] = true; next_info.num--; break;
         case CHECK: next_info.bet(det); break;
-        case RAISE_3BB: next_info.bet(det + 3 * BIG_BLIND_CHIP); break;
+        case RAISE_QUARTER_POT: next_info.bet(det + pot / 4); break;
         case RAISE_HALF_POT: next_info.bet(det + pot / 2); break;
         case RAISE_POT: next_info.bet(det + pot); break;
         case RAISE_2POT: next_info.bet(det + pot * 2); break;
@@ -105,4 +135,8 @@ void Game::act(InfoSet &info, int action, InfoSet &next_info)
     }
 
     next_info.player = next_player;
+
+//    int s = next_info.pot;
+//    for(int i = 0; i < NUM_PLAYER; i++) s += next_info.bets[i] + next_info.chips[i];
+//    assert(s == INIT_CHIP * NUM_PLAYER);
 }

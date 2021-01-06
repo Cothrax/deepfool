@@ -6,6 +6,7 @@
 #include "calculator.h"
 #include <algorithm>
 #include <cstring>
+#include <random>
 
 
 typedef enum {Highcard=0,Pair,TowPairs,ThreeSame,Straight,Flush,FullHouse,FourSame,SFlush} CType;
@@ -119,14 +120,74 @@ int Calculator::power(int *holes, int *pubs)
 int Calculator::potential_power(int *holes, int *pubs, int step)
 {
     // TODO
-    return 0;
-}
+    if(step == 3) return power(holes, pubs);
 
+    int num = step == 0 ? 0 : 2 + step;
+    memcpy(cards, holes, sizeof(int) * 2);
+    memcpy(cards + 2, pubs, sizeof(int) * num);
+    std::sort(cards, cards+num+2);
+
+    ull key = 0;
+    for(int i = 0; i < num+2; i++) key = key * 52 + cards[i];
+    auto x = pp_cache.find(key);
+    if(x != pp_cache.end()) return x->second;
+
+    int iter = MC_ITER / (step + 1);
+
+    memset(mask, 0, sizeof(mask));
+    mask[holes[0]] = true;
+    mask[holes[1]] = true;
+    int cnt = num;
+
+    for(int i = 0; i < num; i++)
+    {
+        mask[pubs[i]] = true;
+        cards[i] = pubs[i];
+    }
+
+    for(int i = 0; i < 52; i++) if(!mask[i]) cards[cnt++] = i;
+
+    ll res = 0;
+    for(int i = 0; i < iter; i++)
+    {
+        std::shuffle(cards+num, cards+52, std::mt19937(std::random_device()()));
+        res += (ll) power(holes, cards);
+    }
+    return pp_cache[key] = (int)(res / iter);
+}
 
 int Calculator::opp_potential_power(int *holes, int *pubs, int step)
 {
-    // TODO
-    return 0;
+    int num = step == 0 ? 0 : 2 + step;
+    memcpy(cards, holes, sizeof(int) * 2);
+    memcpy(cards + 2, pubs, sizeof(int) * num);
+    std::sort(cards, cards+num+2);
+
+    ull key = 0;
+    for(int i = 0; i < num+2; i++) key = key * 52 + cards[i];
+    auto x = opp_cache.find(key);
+    if(x != opp_cache.end()) return x->second;
+
+    memset(mask, 0, sizeof(mask));
+    mask[holes[0]] = true;
+    mask[holes[1]] = true;
+
+    int cnt = num;
+
+    for(int i = 0; i < num; i++)
+    {
+        mask[pubs[i]] = true;
+        cards[i] = pubs[i];
+    }
+    for(int i = 0; i < 52; i++) if(!mask[i]) cards[cnt++] = i;
+
+    ll res = 0;
+    for(int i = 0; i < MC_ITER; i++)
+    {
+        std::shuffle(cards+num, cards+52, std::mt19937(std::random_device()()));
+        res += (ll) power(cards+5, cards);
+    }
+    return opp_cache[key] = (int)(res / MC_ITER);
 }
 
 Calculator calculator;
