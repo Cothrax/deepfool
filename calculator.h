@@ -7,6 +7,7 @@
 
 // 花色
 // 牌的编码为 (花色*13 + 数字)，范围[0, 51]
+// A 的编码为12而不是0 (可以改)
 #define SPADE 0
 #define DIAMOND 1
 #define CLUB 2
@@ -21,14 +22,17 @@ public:
 
     // 牌力
     // 底牌 holes, 5张公共牌 pubs
+    // done
     int power(int *holes, int *pubs);
 
     // 玩家的先验期望牌力
     // 底牌 holes, step张公共牌 pubs
+    // undone
     int potential_power(int *holes, int *pubs, int step);
 
     // 任一对手的先验期望牌力
     // 底牌 holes, step张公共牌 pubs
+    // undone
     int opp_potential_power(int *holes, int *pubs, int step);
 };
 
