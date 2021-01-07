@@ -1,0 +1,22 @@
+title = "configuration in train mode"
+
+[general]
+    data_path = ""
+    H = 128
+    batch_size = 60
+    num_workers = 4
+    shuffle = true
+    start_epoch = 0
+    epochs = 120
+    test_times = 1
+
+[model]
+    load = false
+    freeze = false
+    load_path = ""
+    save_path = ""
+
+[hyperparameters]
+    lr = 1e-3
+    betas = 0.9
+    decay = 1e-4
