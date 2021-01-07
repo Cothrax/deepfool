@@ -10,11 +10,6 @@
 extern long long debug_counter;
 extern int debug_max_dep;
 
-CFR::CFR(Oracle *oracle)
-{
-    _oracle = oracle;
-    oracle->init();
-}
 
 bool CFR::cfr(InfoSet &info, Game &game, vector<pair<int, int>> &history, double *pi, double *util, int dep)
 {
@@ -233,4 +228,9 @@ void CFR::parallel_train(int iter, int batch_size)
         for(int j = 0; j < NUM_PLAYER; j++) printf("%.3lf ", cum_util[j] / i);
         printf("\ncnt = %lld, max_dep = %d\n", debug_counter, debug_max_dep);
     }
+}
+
+CFR::CFR()
+{
+    _oracle = new NaiveOracleV2();
 }

@@ -241,7 +241,7 @@ void DeepOracle::submit(InfoSet &info, Game &game, vector<pair<int, int>> &histo
 
 ull DeepOracle::single_query(Game &game, InfoSet &info, Strategy &strategy)
 {
-
+    
 }
 
 void DeepOracle::commit()

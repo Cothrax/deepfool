@@ -22,7 +22,7 @@ private:
     queue<int> sampling_actions;
 
 public:
-    CFR(Oracle *oracle);
+    CFR();
     bool cfr(InfoSet &info, Game &game, vector<pair<int, int>> &history, double *pi, double *util, int dep);
     void train(int iter);
 

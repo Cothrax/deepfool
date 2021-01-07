@@ -7,7 +7,9 @@
 long long debug_counter;
 int debug_max_dep;
 NaiveOracleV2 oracle;
-CFR cfr(&oracle);
+//CFR cfr(&oracle);
+CFR cfr;
+
 
 
 void test_calculator()
