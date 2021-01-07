@@ -9,7 +9,7 @@
 #include <random>
 #include <cassert>
 
-#define decomp(x) ((x)/13+'a'),(x%13)
+#define SHOW 0
 
 InfoSet::InfoSet(Game &game)
 {
@@ -24,6 +24,7 @@ InfoSet::InfoSet(Game &game)
     bets[game.big_blind] = BIG_BLIND_CHIP;
     chips[game.start] -= SMALL_BLIND_CHIP;
     chips[game.big_blind] -= BIG_BLIND_CHIP;
+    cur_bet = BIG_BLIND_CHIP;
 
     player = (game.start+2) % NUM_PLAYER;
     num = NUM_PLAYER;
@@ -49,13 +50,15 @@ void Game::generate(int start_, int pov_)
     for(int i = 0; i < NUM_PLAYER; i++)
         power[i] = calculator.power(holes[i], pubs);
 
-    printf("gen game: start = %d, pov = %d\n\tholes: ", start_, pov_);
-    for(int i = 0; i < 1; i++) printf("(<%c:%d>, <%c:%d>), ", decomp(holes[i][0]), decomp(holes[i][1]));
-    printf("\n");
-//    printf("\n\tpubs:(<%c:%d>, <%c:%d>, <%c:%d>)\n",
-//            decomp(pubs[0]),
-//            decomp(pubs[1]),
-//            decomp(pubs[2]));
+    if(SHOW)
+    {
+        printf("gen game: start = %d, pov = %d\n\tholes: ", start_, pov_);
+        for(int i = 0; i < NUM_PLAYER; i++) printf("(<%c:%d>, <%c:%d>), ", decomp(holes[i][0]), decomp(holes[i][1]));
+        printf("\n\tpubs:(<%c:%d>, <%c:%d>, <%c:%d>)\n",
+               decomp(pubs[0]),
+               decomp(pubs[1]),
+               decomp(pubs[2]));
+    }
 }
 
 int Game::change_state(InfoSet &info)
@@ -66,29 +69,31 @@ int Game::change_state(InfoSet &info)
         memset(info.bets, 0, sizeof(info.bets));
         return GAME_OVER;
     }
-    int i, lst_bet = -1;
+    int i;
     for(i = 0; i < NUM_PLAYER; i++)
-        if(!info.folds[i])
-        {
-            if(lst_bet == -1 || lst_bet == info.bets[i]) lst_bet = info.bets[i];
-            else return NO_CHANGE;
-        }
+        if(!info.folds[i] && info.chips[i] > 0 && info.bets[i] != info.cur_bet)
+            return NO_CHANGE;
 
     info.player = big_blind;
+    while(info.folds[info.player]) info.player = info.player == NUM_PLAYER-1 ? 0 : info.player+1;
+
     for(int bet : info.bets) info.pot += bet;
     memset(info.bets, 0, sizeof(info.bets));
 
-    switch(info.step)
+    if(SHOW)
     {
-        case PRE_FLOP: printf("flop: <%c:%d>, <%c:%d>, <%c:%d>\n",
-                              decomp(pubs[0]), decomp(pubs[1]), decomp(pubs[2])); break;
-        case FLOP: printf("turn: <%c:%d>\n", decomp(pubs[3])); break;
-        case TURN: printf("river: <%c:%d>\n", decomp(pubs[4])); break;
-        case RIVER:
-            printf("holes: \n");
-            for(int j = 0; j < NUM_PLAYER; j++) printf("\t%d: <%c:%d>, <%c:%d>\n", j,
-                    decomp(holes[i][0]), decomp(holes[i][1]));
-            break;
+        switch(info.step)
+        {
+            case PRE_FLOP: printf("flop: <%c:%d>, <%c:%d>, <%c:%d>\n",
+                                  decomp(pubs[0]), decomp(pubs[1]), decomp(pubs[2])); break;
+            case FLOP: printf("turn: <%c:%d>\n", decomp(pubs[3])); break;
+            case TURN: printf("river: <%c:%d>\n", decomp(pubs[4])); break;
+            case RIVER:
+                printf("holes: \n");
+                for(int j = 0; j < NUM_PLAYER; j++) printf("\t%d: <%c:%d>, <%c:%d>\n", j,
+                                                           decomp(holes[j][0]), decomp(holes[j][1]));
+                break;
+        }
     }
 
     return ++info.step;
@@ -115,25 +120,27 @@ void Game::act(InfoSet &info, int action, InfoSet &next_info)
     memcpy(&next_info, &info, sizeof(InfoSet));
     int prev_player = info.player, next_player = info.player;
 
-    do prev_player = prev_player ? prev_player - 1 : NUM_PLAYER - 1;
-    while(info.folds[prev_player]);
+//    do prev_player = prev_player ? prev_player - 1 : NUM_PLAYER - 1;
+//    while(info.folds[prev_player]);
     do next_player = next_player == NUM_PLAYER - 1 ? 0 : next_player + 1;
     while(info.folds[next_player]);
 
-    int det = info.bets[prev_player] - info.bets[info.player];
+    int det = info.cur_bet - info.bets[info.player];
+    assert(det >= 0);
     int pot = next_info.pot;
     for(int i = 0; i < NUM_PLAYER; i++) pot += info.bets[i];
 
     switch(action) {
         case FOLD: next_info.folds[info.player] = true; next_info.num--; break;
         case CHECK: next_info.bet(det); break;
-        case RAISE_QUARTER_POT: next_info.bet(det + pot / 4); break;
+        case RAISE_3BB: next_info.bet(std::max(BIG_BLIND_CHIP*3, info.cur_bet) - info.bets[info.player]); break;
         case RAISE_HALF_POT: next_info.bet(det + pot / 2); break;
         case RAISE_POT: next_info.bet(det + pot); break;
         case RAISE_2POT: next_info.bet(det + pot * 2); break;
         default: next_info.bet(INF32); break;
     }
 
+    next_info.cur_bet = std::max(next_info.cur_bet, next_info.bets[next_info.player]);
     next_info.player = next_player;
 
 //    int s = next_info.pot;

@@ -12,7 +12,7 @@
 
 #define FOLD 0
 #define CHECK 1
-#define RAISE_QUARTER_POT 6
+#define RAISE_3BB 6
 #define RAISE_HALF_POT 2
 #define RAISE_POT 4
 #define RAISE_2POT 3
@@ -28,6 +28,9 @@
 
 typedef double Strategy[NUM_ACTION];
 
+#define decomp(x) ((x)/13+'a'),(x%13)
+
+
 struct Game;
 struct InfoSet
 {
@@ -35,6 +38,7 @@ struct InfoSet
     int num;
     int pot;
     int step;
+    int cur_bet;
     int chips[NUM_PLAYER];
     int bets[NUM_PLAYER];
     bool folds[NUM_PLAYER];

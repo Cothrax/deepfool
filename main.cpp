@@ -6,7 +6,7 @@
 
 long long debug_counter;
 int debug_max_dep;
-NaiveOracle oracle;
+NaiveOracleV2 oracle;
 CFR cfr(&oracle);
 
 
@@ -55,7 +55,7 @@ void test_calculator()
 
 void play_with_oracle()
 {
-    oracle.load("f_naive_oracle_100000.dat");
+    oracle.load("naive_oracle_v2_10000000.dat");
     for(int _ = 0; _ < 100; _++)
     {
         Game game;
@@ -107,14 +107,14 @@ int main() {
 //    test_oracle();
 //    return 0;
 
-    play_with_oracle();
-    return 0;
+//    play_with_oracle();
+//    return 0;
 
     time_t now = time(0);
 
-    cfr.train(100000);
+    cfr.train(10000000);
     std::cout << "COST: " << time(0) - now << " sec" << std::endl;
-    oracle.dump("f_naive_oracle_100000.dat");
+    oracle.dump("naive_oracle_v2_10000000.dat");
 
     return 0;
 }

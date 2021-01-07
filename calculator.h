@@ -21,7 +21,16 @@ typedef unsigned long long ull;
 #define CLUB 2
 #define HEART 3
 
+typedef enum {Highcard=0,Pair,TowPairs,ThreeSame,Straight,Flush,FullHouse,FourSame,SFlush} CType;
+typedef struct {
+    CType type;
+    char other[5];
+} Card_power;
+
 class Calculator {
+    int *tb_rank5_flush;
+    int *tb_rank5_noflush;
+
     bool mask[52];
     int cards[52];
 
@@ -33,6 +42,10 @@ private:
 
 public:
     Calculator() { init(); }
+
+    void gen_rank5_table(void);
+    int rank5_ranged(int c1, int c2, int c3, int c4, int c5, int flush);
+    void gen_cp(Card_power * cp, CType tp, int c1,int c2, int c3, int c4, int c5);
 
     // 牌力
     // 底牌 holes, 5张公共牌 pubs

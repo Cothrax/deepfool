@@ -13,6 +13,7 @@
 typedef unsigned long long ull;
 using std::unordered_map;
 using std::vector;
+using std::pair;
 
 #define REGRET_FAC 1e3
 //#define NOT_FOUND (ull)(1<<60)
@@ -24,12 +25,14 @@ public:
     virtual ull single_query(Game &game, InfoSet &info, Strategy &strategy) = 0;
     virtual void update(Game &game, ull node, double *regret) = 0;
 
-    virtual void query(vector<InfoSet> &infos, vector<Strategy> &strategies) = 0;
-    // void learn(vector<Infoset> &infos, vector<Strategy> &strategies) = 0;
+    virtual void submit(InfoSet &info, Game &game, vector<pair<int, int>> &history) {};
+    virtual void commit() {};
+    virtual void learn() {};
 };
 
 class NaiveOracle: public Oracle
 {
+protected:
     double init_prob[NUM_ACTION];
 public:
     struct Node
@@ -40,8 +43,8 @@ public:
     };
 
     unordered_map<ull, Node> node_map;
-    ull encode(Game &game, InfoSet &info);
-    void decode(ull key, int *res);
+    virtual ull encode(Game &game, InfoSet &info);
+    virtual void decode(ull key, int *res);
 
     void init();
     void query(vector<InfoSet> &infos, vector<Strategy> &strategies) {}
@@ -49,8 +52,47 @@ public:
     ull single_query(Game &game, InfoSet &info, Strategy &strategy) override;
     void update(Game &game, ull node, double *regret) override;
     void dump(const char *fn);
-    void load(const char *fn);
+    virtual void load(const char *fn);
 };
 
+class NaiveOracleV2: public NaiveOracle
+{
+public:
+    ull encode(Game &game, InfoSet &info) override;
+    void decode(ull key, int *res) override;
+    void load(const char *fn) override;
+};
+
+
+#define MAX_HIST_SIZE 128
+class DeepOracle: public Oracle
+{
+    struct Wrap
+    {
+        int player;
+        int holes[2];
+        int pubs[5];
+        int history[MAX_HIST_SIZE][2];
+        double regret[NUM_ACTION];
+    };
+
+    int commit_time;
+
+    virtual void init()
+    {
+        commit_time = 0;
+        cache.clear();
+    }
+
+    ull single_query(Game &game, InfoSet &info, Strategy &strategy) override;
+
+    vector<Wrap> cache;
+    vector<Strategy> strategies;
+
+    void update(Game &game, ull node, double *regret);
+    virtual void submit(InfoSet &info, Game &game, vector<pair<int, int>> &history);
+    virtual void commit();
+    virtual void learn();
+};
 
 #endif //DEEPFOOL_ORACLE_H

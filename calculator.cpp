@@ -9,14 +9,7 @@
 #include <random>
 
 
-typedef enum {Highcard=0,Pair,TowPairs,ThreeSame,Straight,Flush,FullHouse,FourSame,SFlush} CType;
-typedef struct {
-    CType type;
-    char other[5];
-} Card_power;
-
-static void gen_cp(Card_power * cp, CType tp, int c1,int c2, int c3, int c4, int c5)
-
+void Calculator::gen_cp(Card_power * cp, CType tp, int c1,int c2, int c3, int c4, int c5)
 {
     cp->type = tp;
     cp->other[0]=c1; cp->other[1]=c2; cp->other[2]=c3; cp->other[3]=c4; cp->other[4]=c5;
@@ -24,7 +17,7 @@ static void gen_cp(Card_power * cp, CType tp, int c1,int c2, int c3, int c4, int
 
 #define ISSTRAIGHT(c1,c2,c3,c4,c5) ((c1)==(c2)+1&&(c2)==(c3)+1&&(c3)==(c4)+1&&(((c5)==12&&(c4)==0)||(c4)==(c5)+1))
 // c1>c2>c3>c4>c5 [0:12]
-static int rank5_ranged(int c1, int c2, int c3, int c4, int c5, int flush)
+int Calculator::rank5_ranged(int c1, int c2, int c3, int c4, int c5, int flush)
 {
     Card_power cp;
     if(flush){
@@ -67,11 +60,11 @@ static int rank5_ranged(int c1, int c2, int c3, int c4, int c5, int flush)
     return cp.type<<20 | cp.other[0]<<16 | cp.other[1]<<12 | cp.other[2]<<8 | cp.other[3]<<4 | cp.other[4];
 }
 
-static int tb_rank5_flush[371293]; //13^5
-static int tb_rank5_noflush[371293];
+//static int tb_rank5_flush[371293]; //13^5
+//static int tb_rank5_noflush[371293];
 
 #define GET_INDEX5(c1,c2,c3,c4,c5) ((c1)*169*169 + (c2)*169*13 + (c3)*13*13+ (c4)*13 + (c5))
-static void gen_rank5_table(void)
+void Calculator::gen_rank5_table(void)
 {
     int c[5];
     for(c[0]=0;c[0]<13;c[0]++)
@@ -91,6 +84,8 @@ static void gen_rank5_table(void)
 void Calculator::init()
 {
     // TODO
+    tb_rank5_flush = new int[371293];
+    tb_rank5_noflush = new int[371293];
     gen_rank5_table();
 }
 

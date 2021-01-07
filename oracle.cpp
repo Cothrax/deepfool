@@ -10,14 +10,14 @@
 
 void NaiveOracle::init()
 {
-    init_prob[FOLD]           = 1./4;
-    init_prob[CHECK]          = 1./4;
-//    init_prob[RAISE_3BB]      = 1./4;
-    init_prob[RAISE_QUARTER_POT]= 1./4;
-    init_prob[RAISE_HALF_POT] = 1./4/4;
-    init_prob[RAISE_POT]      = 1./4/4;
-    init_prob[RAISE_2POT]     = 1./4/4;
-    init_prob[ALL_IN]         = 1./4/4;
+    init_prob[FOLD]           = 1./6;
+    init_prob[CHECK]          = 1./6;
+    init_prob[RAISE_3BB]      = 1./6;
+//    init_prob[RAISE_QUARTER_POT]= 1./4;
+    init_prob[RAISE_HALF_POT] = 1./6;
+    init_prob[RAISE_POT]      = 1./6;
+    init_prob[RAISE_2POT]     = 1./6;
+    init_prob[ALL_IN]         = 0;
 }
 
 void NaiveOracle::Node::get_strategy(Strategy &strategy, double *init_prob)
@@ -128,4 +128,134 @@ void NaiveOracle::load(const char *fn)
     }
 }
 
+inline bool comp(int a, int b) { return a%13 < b%13; }
+
+ull NaiveOracleV2::encode(Game &game, InfoSet &info)
+{
+    int cards[7];
+    int num = info.step == 0 ? 0 : info.step + 2;
+
+    memcpy(cards, game.holes[info.player], sizeof(int) * 2);
+    memcpy(cards + 2, game.holes[info.player], sizeof(int) * num);
+    std::sort(cards, cards+2, comp);
+    std::sort(cards+2, cards+2+num, comp);
+
+//    for(int i = 0; i < num+2; i++) printf("<%c:%d>, ", decomp(cards[i]));
+
+    int type[4] = {-1, -1, -1, -1};
+    int cnt = 0;
+    for(int i = 0; i < num+2; i++)
+        if(type[cards[i]/13] == -1) type[cards[i]/13] = cnt++;
+    for(int i = 0; i < num+2; i++)
+        cards[i] = type[cards[i]/13]*13 + cards[i]%13;
+
+//    std::sort(cards, cards+2);
+//    std::sort(cards+2, cards+2+num);
+
+//    printf(" => ");
+//    for(int i = 0; i < num+2; i++) printf("<%c:%d>, ", decomp(cards[i]));
+//    printf("\n");
+
+    ull key = 0;
+    for(int i = 0; i < num+2; i++) key = key * 52 + cards[i];
+
+    int bet_num = 0;
+    for(int i = 0; i < NUM_PLAYER; i++) bet_num += info.bets[i] != 0;
+
+    key = ((key * NUM_PLAYER + bet_num) * NUM_PLAYER + info.num) * 4 + info.step;
+
+    return key;
+}
+
+void NaiveOracleV2::decode(ull key, int *res)
+{
+    int step = key%4; key /= 4;
+    int play_num = key%NUM_PLAYER; key /= NUM_PLAYER;
+    int bet_num = key%NUM_PLAYER; key /= NUM_PLAYER;
+
+
+    res[0] = step;
+    res[1] = play_num;
+    res[2] = bet_num;
+    int num = step == 0 ? 0 : step + 2;
+    for(int i = 0; i < num + 2; i++)
+    {
+        res[3+i] = key%52;
+        key /= 52;
+    }
+}
+
+void NaiveOracleV2::load(const char *fn)
+{
+    std::ifstream fin(fn, std::ios_base::in | std::ios_base::binary);
+    int s; fin.read((char*)&s, sizeof(int));
+    printf("node map size = %d\n", s);
+
+    ull key; Node node;
+
+    int res[20];
+    Strategy strategy;
+    for(int _ = 0; _ < s; _++) {
+        fin.read((char *) &key, sizeof(key));
+        fin.read((char *) &node, sizeof(node));
+        node_map[key] = node;
+
+        decode(key, res);
+        int num = res[0] == 0 ? 0 : res[0] + 2;
+
+        node.get_strategy(strategy, init_prob);
+
+        if (res[0] == 0) {
+            printf("(");
+            for (int i = 0; i < 3; i++) printf("%d, ", res[i]);
+            for (int i = 0; i < num + 2; i++) printf("<%c:%d>, ", decomp(res[3 + i]));
+            printf(") => (");
+            for (int i = 0; i < NUM_ACTION; i++) printf("%.3lf, ", strategy[i]);
+            printf(")\n");
+        }
+    }
+}
+
+void DeepOracle::submit(InfoSet &info, Game &game, vector<pair<int, int>> &history)
+{
+    Wrap wrap;
+    wrap.player = info.player;
+    memcpy(wrap.holes, game.holes[info.player], sizeof(int) * 2);
+    memcpy(wrap.pubs, game.pubs, sizeof(int) * 5);
+    int num = info.step == 0 ? 0 : info.step + 2;
+    for(int i = num; i < 5; i++) wrap.pubs[i] = -1;
+
+    int ofs = std::max(0, ((int)history.size())-MAX_HIST_SIZE);
+    for(int i = ofs; i < history.size(); i++)
+    {
+        wrap.history[i-ofs][0] = history[i].first;
+        wrap.history[i-ofs][1] = history[i].second;
+    }
+    for(int i = history.size(); i < MAX_HIST_SIZE; i++)
+    {
+        wrap.history[i][0] = -1;
+        wrap.history[i][1] = -1;
+    }
+    cache.push_back(wrap);
+}
+
+ull DeepOracle::single_query(Game &game, InfoSet &info, Strategy &strategy)
+{
+
+}
+
+void DeepOracle::commit()
+{
+    commit_time = cache.size();
+}
+
+void DeepOracle::update(Game &game, ull node, double *regret)
+{
+    memcpy(regret, cache[node].regret, sizeof(double) * NUM_ACTION);
+}
+
+void DeepOracle::learn()
+{
+
+}
 
