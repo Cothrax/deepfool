@@ -78,7 +78,7 @@ class DF(nn.Module):
     def forward(self, card1, card2, history):# history = [history of action and pot]
         # card1 of shape(B, 2)
         # card2 of shape(B, 5)
-        # history of shape (B, 16, 6)
+        # history of shape (B, T, 6)
 
         f1 = self.card(card1, card2)
         f2 = self.hist_rnn(history)

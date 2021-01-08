@@ -67,10 +67,10 @@ def main(config_path):
         ]
         train(train_package)
 
-        if (epoch + 1) % config["model"]["save_iter"] == 0:
+        if (epoch) % config["model"]["save_iter"] == 0:
             save_checkpoint({
                 "model": model_crt.state_dict(),
-            }, config["general"]["save_path"] + "checkpoint_{}.pt".format(epoch+1))
+            }, config["model"]["save_path"] + "checkpoint_{}.pt".format(epoch+1))
 
         model_last.load_state_dict(model_crt.state_dict())
 
