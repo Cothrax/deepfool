@@ -8,9 +8,12 @@ def test_games():
     while game.change_state() != GAME_OVER:
         if not game.is_raise_allowed():
             print('[raise not allowed]')
-        act = int(input('enter action: '))
-        # act = random.randint(0, NUM_ACTION-1)
+            act = random.randint(0, 1)
+        else:
+            act = random.randint(0, NUM_ACTION-1)
         game.act(act)
+        input()
+
     print(game.payoff())
 
 

@@ -176,8 +176,6 @@ class Game:
             self.player = (self.player + 1) % NUM_PLAYER
 
         self.step += 1
-        self.if_raise[:, :] = False
-        self.if_call[:, :] = False
         self.cur_bet = 0
 
     def change_state(self):
