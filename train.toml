@@ -9,13 +9,14 @@ title = "configuration in train mode"
     start_epoch = 0
     epochs = 120
     test_times = 1
+    max_iter = 10
 
 [model]
     load = false
     freeze = false
     load_path = ""
     save_path = "./"
-    save_iter = 10
+    save_iter = 100
 
 [hyperparameters]
     lr = 1e-3

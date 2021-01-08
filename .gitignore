@@ -1,2 +1,2 @@
-./runs/
-./__pycache__/
+./runs/*
+./__pycache__/*
