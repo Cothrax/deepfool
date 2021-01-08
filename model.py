@@ -72,7 +72,7 @@ class DF(nn.Module):
             nn.Linear(dim, dim),
             nn.ReLU(True),
             nn.Linear(dim, num_action),
-            nn.Softmax()
+            nn.Softmax(dim=1)
         )
 
     def forward(self, card1, card2, history):# history = [history of action and pot]

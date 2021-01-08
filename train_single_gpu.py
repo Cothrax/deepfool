@@ -14,14 +14,16 @@ from model import DF
 from utils import *
 
 def main(config_path):
+    global iteration
+    iteration = 1
     cudnn.benchmark = True
 
     config = toml.load(config_path)
     writer = SummaryWriter("runs/poker")
 
     # model
-    model_crt  = DF(18, 7)
-    model_last = DF(18, 7)
+    model_crt  = DF(18, 6)
+    model_last = DF(18, 6)
     for p in model_last.parameters():
         p.requires_grad = False
 
@@ -54,7 +56,6 @@ def main(config_path):
     optimizer = optim.Adam(params, betas=(config["hyperparameters"]["betas"], 0.999), weight_decay=config["hyperparameters"]["decay"])
     lr_scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
 
-    iteration = 1
     while(iteration < config["general"]["max_iter"]):
         train_package = [
             dataloader_train,
@@ -64,7 +65,6 @@ def main(config_path):
             lr_scheduler,
             writer,
             config,
-            iteration
         ]
         train(train_package)
 
@@ -72,25 +72,28 @@ def main(config_path):
             save_checkpoint({
                 "model": model_crt.state_dict(),
             }, config["model"]["save_path"] + "checkpoint_{}.pt".format(iteration))
+            print("save model successfully")
 
         model_last.load_state_dict(model_crt.state_dict())
 
         #lr_scheduler.step(epoch-config["general"]["start_epoch"])
 
 def train(package):
+    global iteration
     [dataloader, 
      model, 
      criterion, 
      optimizer, 
      lr_scheduler,
      writer,
-     config,
-     iteration] = package
+     config] = package
 
     model.train()
     all_holes, all_pubs, all_history, all_label = dataloader.__getitem__()
     length = all_holes.shape[0]
     st = 0
+    loss = 0
+    ctr = 0
     while(True):
         if st >= length:
             break
@@ -108,14 +111,17 @@ def train(package):
             history = history.cuda()
 
             predict = model(holes, pubs, history)
-            loss = criterion(predict, label)
-            loss.backward()
+            loss_ = criterion(predict, label)
+            loss_.backward()
             optimizer.step()
             optimizer.zero_grad()
             st = ed
-            print("iteration: {} loss: {:.6f}".format(iteration, loss))
-            writer.add_scalars("train loss", {"sum": loss}, iteration)
-            iteration += 1
+            loss += loss_.item()
+            ctr += 1
+    loss = loss / ctr
+    print("iteration: {} loss: {:.6f}".format(iteration, loss))
+    writer.add_scalars("train loss", {"sum": loss}, iteration)
+    iteration += 1
 
 if __name__ == "__main__":
     main("./train.toml")

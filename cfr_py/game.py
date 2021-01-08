@@ -11,7 +11,6 @@ def card2str(x):
 
 
 NUM_PLAYER = 6
-NUM_ACTION = 7
 INIT_CHIPS = 500
 SMALL_BLIND = 1
 BIG_BLIND = 2
@@ -19,14 +18,16 @@ BIG_BLIND = 2
 FOLD = 0
 CHECK = 1
 RAISE_3BB = 2
-RAISE_HALF_POT = 3
-RAISE_POT = 4
-RAISE_2POT = 5
-ALL_IN = 6
-NUM_ACTION = 7
+# RAISE_HALF_POT = 3
+RAISE_POT = 3
+RAISE_2POT = 4
+ALL_IN = 5
+NUM_ACTION = 6
 
 # cum_prob = np.array([0.1, 0.6, 0.65, 0.8, 0.9, 0.99])
-init_prob = np.array([0.1, 0.5, 0.05, 0.2, 0.1, 0.04, 0.01])
+init_prob = np.array([0.1, 0.3, 0.3, 0.15, 0.10, 0.05])
+#init_prob = np.ones(NUM_ACTION) / NUM_ACTION
+#init_prob = np.array([0.1, 0.5, 0.05, 0.2, 0.1, 0.04, 0.01])
 
 NO_CHANGE = 0
 PRE_FLOP = 0
@@ -124,8 +125,8 @@ class Game:
             self.bet(det + BIG_BLIND * 3)
         elif a == RAISE_POT:
             self.bet(det + pot)
-        elif a == RAISE_HALF_POT:
-            self.bet(det + pot // 2)
+        #elif a == RAISE_HALF_POT:
+        #    self.bet(det + pot // 2)
         elif a == RAISE_2POT:
             self.bet(det + pot)
         elif a == ALL_IN:

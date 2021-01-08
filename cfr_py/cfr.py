@@ -4,7 +4,7 @@ from queue import Queue
 import numpy as np
 from time import time
 
-FOLD_NUM = 10
+FOLD_NUM = 100
 
 
 class CFR:
@@ -57,7 +57,7 @@ class CFR:
             if regret is not None:
                 regret_plus = np.max(np.vstack([regret, np.zeros(NUM_ACTION)]), axis=0)
                 tot = np.sum(regret_plus)
-                if tot:
+                if abs(tot) > 1e-3:
                     k = self.T // 2
                     new = (regret_plus / tot + old * k) / (k + 1)
                     label = [sample, new]
