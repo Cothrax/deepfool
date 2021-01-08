@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from torch.autograd import Function
 from torch.autograd.function import once_differentiable
 from torch.utils.data import DataLoader
-from prefetch_generator import BackgroundGenerator
+#from prefetch_generator import BackgroundGenerator
 import flow_vis
 
 

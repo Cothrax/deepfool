@@ -20,9 +20,32 @@ class CardEmbedding(nn.Module):
 
         return embs.view(batch_size, num_cards, -1).sum(1)
 
-class History_Act(nn.Moudle):
+class Card(nn.Module):
+    def __init__(self, dim):
+        super().__init__()
+        self.embed1 = CardEmbedding(dim)
+        self.embed2 = CardEmbedding(dim)
+        self.fc = nn.Sequential(
+            nn.Linear(dim*2, 192),
+            nn.ReLU(True),
+            nn.Linear(192, 192),
+            nn.ReLU(True),
+            nn.Linear(192, dim),
+            nn.ReLU(True)
+        )
+    def forward(card1, card2):
+        f1 = self.embed1(card1).sum(dim=2)
+        f2 = self.embed2(card2).sum(dim=2)
+        f3 = torch.cat([f1, f2], dim=1)
+        f4 = self.fc(f3)
+
+        return f4
+
+
+class History_Act(nn.Module):
     def __init__(self, in_channels, hidden_channels, out_channels):
-        self.gru = nn.GRU(in_channels, hidden_channels, 1, batch_first=True, bidirectional=True, dropout=0.2)
+        super().__init__()
+        self.gru = nn.GRU(in_channels, hidden_channels, 1, batch_first=True, bidirectional=True, dropout=0)#TODO dropout 0.2
         self.fc = nn.Linear(2*hidden_channels, out_channels)
         self.relu = nn.ReLU(True)
     
@@ -35,17 +58,9 @@ class History_Act(nn.Moudle):
         return out
 
 class DF(nn.Module):
-    def __init__(self, num_player, num_action, dim=256):
+    def __init__(self, num_player, num_action, dim=64):
         super().__init__()
-        self.card = nn.Sequential(
-            CardEmbedding(dim)
-            nn.Linear(dim, dim),
-            nn.ReLU(True),
-            nn.Linear(dim, dim),
-            nn.ReLU(True),
-            nn.Linear(dim, dim),
-            nn.ReLU(True)
-        )
+        self.card = Card(dim)
 
         self.hist_rnn = History_Act(num_player, dim, dim)
 
@@ -59,7 +74,12 @@ class DF(nn.Module):
         )
 
     def forward(self, card, history):# history = [history of action and pot]
-        f1 = self.card(card)
+        # card1 of shape(B, 2)
+        # card2 of shape(B, 5)
+        # history of shape (B, 16, 6)
+
+        card1, card2 = card
+        f1 = self.card(card1, card2)
         f2 = self.hist_rnn(history)
         f3 = torch.cat([f1, f2], dim=1)
         f4 = self.post_process(f3)

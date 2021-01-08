@@ -7,9 +7,6 @@
 #include <cmath>
 #include <cassert>
 
-extern long long debug_counter;
-extern int debug_max_dep;
-
 
 bool CFR::cfr(InfoSet &info, Game &game, vector<pair<int, int>> &history, double *pi, double *util, int dep)
 {
@@ -233,4 +230,11 @@ void CFR::parallel_train(int iter, int batch_size)
 CFR::CFR()
 {
     _oracle = new NaiveOracleV2();
+}
+
+void CFR::print_array(std::vector<std::vector<int>> myarray)
+{
+    for (int i=0; i<2; i++)
+        for (int j=0; j<2; j++)
+            printf("[%d][%d] = [%d]\n", i, j, myarray[i][j]);
 }

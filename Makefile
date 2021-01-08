@@ -12,7 +12,6 @@ FILE_O = ./cfr.o ./game.o ./oracle.o ./calculator.o
 #FILE_O = ./calculator.o
 # default super-target
 all: 
-	rm ./*.o
 	g++ -fPIC -c $(FILE)
 	swig -c++ -python -o MYCFR_wrap.cxx MYCFR.i 
 	g++ $(FLAGS) $(PYTHONI) -c MYCFR_wrap.cxx -o MYCFR_wrap.o

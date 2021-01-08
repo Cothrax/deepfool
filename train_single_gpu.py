@@ -20,8 +20,8 @@ def main(config_path):
     writer = SummaryWriter("runs/poker")
 
     # model
-    model_crt  = DF()
-    model_last = DF()
+    model_crt  = DF(6, 8)
+    model_last = DF(6, 8)
 
     # resume from a checkpoint
     if config["model"]["load"]:
@@ -35,7 +35,12 @@ def main(config_path):
 
 
     # data
-    dataloader_train = data.POKER_DATASET(model_last)
+    dataset_train = data.POKER_DATASET(model_last, 10, 4)
+    dataloader_train = dataset_train
+    '''
+    dataloader_train = Data.DataLoader(dataset_train, batch_size=1, shuffle=False, pin_memory=True,
+                        num_workers=config["general"]["num_workers"] , drop_last=False) 
+    '''
 
     # criterion
     criterion = nn.L1Loss()
@@ -80,10 +85,11 @@ def train(package):
      epoch] = package
 
     model.train()
-    feature, label = dataloader.__next__()
+    feature, label = dataloader.__getitem__()
     feature = feature.cuda()
     label = label.cuda()
-    predict = model(feature)
+    holes, pubs, history = feature
+    predict = model(holes, pubs, history)
     loss = criterion(predict, label)
     loss.backward()
     optimizer.step()
