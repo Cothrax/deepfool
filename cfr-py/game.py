@@ -34,7 +34,7 @@ class Game:
                  'chips', 'folds', 'power', 'step', 'num', 'pot',
                  'cur_bet', 'player', 'history']
 
-    def __init__(self, start):
+    def __init__(self, start=0):
         self.holes = -np.ones(shape=(NUM_PLAYER, 2), dtype=np.int)
         self.pubs = -np.ones(shape=5, dtype=np.int)
         self.start = start
@@ -97,27 +97,27 @@ class Game:
             self.history[self.player].append(-1)
             self.player = (self.player + 1) % NUM_PLAYER
 
+    def _change_state(self):
+        self.pot += np.sum(self.bets)
+        self.bets[:] = 0
+        max_len = np.max([len(x) for x in self.history])
+        for i in range(NUM_PLAYER):
+            if len(self.history[i]) != max_len:
+                det = max_len - len(self.history[i])
+                self.history[i].extend([-1] * det)
+        self.player = self.big_blind
+        self.step += 1
+
     def change_state(self):
         if self.num == 1:
-            self.pot += np.sum(self.bets)
-            self.bets[:] = 0
+            self._change_state()
             return GAME_OVER
 
         v = self.bets[not self.folds and (self.chips > 0)]
         if np.max(v) != np.min(v):
             return NO_CHANGE
 
-        max_len = np.max([len(x) for x in self.history])
-        for i in range(NUM_PLAYER):
-            if len(self.history[i] != max_len):
-                det = max_len - len(self.history[i])
-                self.history.extend([-1] * det)
-
-        self.player = self.big_blind
-        self.pot += np.sum(self.bets)
-        self.bets[:] = 0
-
-        self.step += 1
+        self._change_state()
         return self.step
 
     def payoff(self):

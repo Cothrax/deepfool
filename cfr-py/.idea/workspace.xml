@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="8a154699-0580-4bff-a49e-0547ef2c61fa" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/cfr-py.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/calculator/MYCFR.i" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/calculator/MYCFR.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/calculator/MYCFR_wrap.cxx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/calculator/MYCFR_wrap.o" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/calculator/Makefile" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/calculator/_MYCFR.so" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/calculator/calculator.cpp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/calculator/calculator.h" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/calculator/calculator.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../MYCFR.i" beforeDir="false" afterPath="$PROJECT_DIR$/../MYCFR.i" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Makefile" beforeDir="false" afterPath="$PROJECT_DIR$/../Makefile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cfr.py" beforeDir="false" afterPath="$PROJECT_DIR$/cfr.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/game.py" beforeDir="false" afterPath="$PROJECT_DIR$/game.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../cfr.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../cfr.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../cfr.h" beforeDir="false" afterPath="$PROJECT_DIR$/../cfr.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../game.h" beforeDir="false" afterPath="$PROJECT_DIR$/../game.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../oracle.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../oracle.cpp" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GitSEFilterConfiguration">
+    <file-type-list>
+      <filtered-out-file-type name="LOCAL_BRANCH" />
+      <filtered-out-file-type name="REMOTE_BRANCH" />
+      <filtered-out-file-type name="TAG" />
+      <filtered-out-file-type name="COMMIT_BY_MESSAGE" />
+    </file-type-list>
+  </component>
+  <component name="ProjectId" id="1mlVf6BtfrJe77BkDX2fJ1PVzc4" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="8a154699-0580-4bff-a49e-0547ef2c61fa" name="Default Changelist" comment="" />
+      <created>1610068265047</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1610068265047</updated>
+      <workItem from="1610068266165" duration="5238000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+</project>

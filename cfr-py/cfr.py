@@ -106,9 +106,9 @@ class CFR:
 
     def search(self, max_iter):
         for i in range(max_iter):
-            start = random.randint(0, NUM_PLAYER - 1)
+            # start = random.randint(0, NUM_PLAYER - 1)
             player = random.randint(0, NUM_PLAYER - 1)
-            game = Game(start)
+            game = Game()
             self.games.put((player, game))
             self.dfs(game, player)
 
