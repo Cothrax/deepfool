@@ -1,9 +1,9 @@
 
 import numpy as np
 import random
-from calculator import MYCFR
+from .calculator import MYCFR
 
-SHOW = True
+SHOW = False
 
 
 def card2str(x):

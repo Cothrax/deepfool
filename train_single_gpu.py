@@ -20,8 +20,8 @@ def main(config_path):
     writer = SummaryWriter("runs/poker")
 
     # model
-    model_crt  = DF(6, 7)
-    model_last = DF(6, 7)
+    model_crt  = DF(18, 7)
+    model_last = DF(18, 7)
     for p in model_last.parameters():
         p.requires_grad = False
 
