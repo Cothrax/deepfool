@@ -37,7 +37,7 @@ def main(config_path):
 
 
     # data
-    dataset_train = data.POKER_DATASET(model_last, config["general"]["max_iter"], 4)
+    dataset_train = data.POKER_DATASET(model_last, config["general"]["max_search_iter"], 4)
     dataloader_train = dataset_train
     '''
     dataloader_train = Data.DataLoader(dataset_train, batch_size=1, shuffle=False, pin_memory=True,
@@ -54,7 +54,8 @@ def main(config_path):
     optimizer = optim.Adam(params, betas=(config["hyperparameters"]["betas"], 0.999), weight_decay=config["hyperparameters"]["decay"])
     lr_scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.9)
 
-    for epoch in range(config["general"]["start_epoch"], config["general"]["start_epoch"] + config["general"]["epochs"]):
+    iteration = 1
+    while(iteration < config["general"]["max_iter"]):
         train_package = [
             dataloader_train,
             model_crt,
@@ -63,14 +64,14 @@ def main(config_path):
             lr_scheduler,
             writer,
             config,
-            epoch
+            iteration
         ]
         train(train_package)
 
-        if (epoch) % config["model"]["save_iter"] == 0:
+        if iteration % config["model"]["save_iter"] == 0:
             save_checkpoint({
                 "model": model_crt.state_dict(),
-            }, config["model"]["save_path"] + "checkpoint_{}.pt".format(epoch+1))
+            }, config["model"]["save_path"] + "checkpoint_{}.pt".format(iteration))
 
         model_last.load_state_dict(model_crt.state_dict())
 
@@ -84,23 +85,37 @@ def train(package):
      lr_scheduler,
      writer,
      config,
-     epoch] = package
+     iteration] = package
 
     model.train()
-    holes, pubs, history, label = dataloader.__getitem__()
-    label = label.cuda()
-    holes = holes.cuda()
-    pubs = pubs.cuda()
-    history = history.cuda()
-    predict = model(holes, pubs, history)
-    loss = criterion(predict, label)
-    loss.backward()
-    optimizer.step()
-    optimizer.zero_grad()
+    all_holes, all_pubs, all_history, all_label = dataloader.__getitem__()
+    length = all_holes.shape[0]
+    st = 0
+    while(True):
+        if st >= length:
+            break
+        else:
+            ed = st + config["general"]["max_samples"]
+            ed = ed if ed < length else length
+            label = all_label[st:ed]
+            holes = all_holes[st:ed]
+            pubs = all_pubs[st:ed]
+            history = all_history[st:ed]
 
-    if epoch % 10 == 0:
-        print("epoch: {} loss: {:.6f}".format(epoch + 1, loss))
-        writer.add_scalars("train loss", {"sum": loss}, epoch+1)
+            label = label.cuda()
+            holes = holes.cuda()
+            pubs = pubs.cuda()
+            history = history.cuda()
+
+            predict = model(holes, pubs, history)
+            loss = criterion(predict, label)
+            loss.backward()
+            optimizer.step()
+            optimizer.zero_grad()
+            st = ed
+            print("iteration: {} loss: {:.6f}".format(iteration, loss))
+            writer.add_scalars("train loss", {"sum": loss}, iteration)
+            iteration += 1
 
 if __name__ == "__main__":
     main("./train.toml")

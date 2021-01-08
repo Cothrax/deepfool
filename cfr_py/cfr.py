@@ -30,7 +30,7 @@ class CFR:
             pubs[:num_card] = game.pubs[:num_card]
         if_call = game.if_call.copy().astype(np.float32)
         if_raise = game.if_raise.copy().astype(np.float32)
-        bets = game.bets.copy().astype(np.float32)
+        bets = game.bets.copy().astype(np.float32) / (100 * BIG_BLIND)
         history = np.concatenate([if_call, if_raise, bets], axis=1)
         sample = [holes, pubs, history]
         self.samples.append(sample)
