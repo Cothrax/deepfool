@@ -2,11 +2,12 @@ from game import *
 from copy import deepcopy, copy
 from queue import Queue
 import numpy as np
+from time import time
 
 
 class CFR:
-    __slots__ = ['sampling_choices', 'games', 'strategies',
-                 'samples', 'regrets', 'run_ptr', 'T']
+    # __slots__ = ['sampling_choices', 'games', 'strategies',
+    #              'samples', 'regrets', 'run_ptr', 'T']
 
     def __init__(self):
         self.T = 0
@@ -16,6 +17,9 @@ class CFR:
         self.run_ptr = 0
         self.strategies = None
         self.samples = None
+        self.regrets = None
+        self.cnt = 0
+        self.max_dep = 0
 
     def submit(self, game):
         # TODO submit to samples
@@ -46,22 +50,42 @@ class CFR:
     def update_strategy(self, node, regret):
         self.regrets[node] = regret
 
-    def dfs(self, game: Game, player):
+    def get_sample_action(self, game):
+        # i = game.player
+        # p = calculator.potential_power(
+        #     int(game.holes[i][0]), int(game.holes[i][1]),
+        #     int(game.pubs[0]), int(game.pubs[1]),
+        #     int(game.pubs[2]), int(game.pubs[3]), int(game.pubs[4]),
+        #     game.step
+        # )
+        a = np.random.choice(range(NUM_ACTION), 1, p=init_prob)
+        return a
+
+    def dfs(self, game: Game, player, dep):
+        self.cnt += 1
+        self.max_dep = max(self.max_dep, dep)
+        # print(self.cnt, dep)
+        if dep > 200:
+            print('Warning: depth too large')
+
         if game.change_state() == GAME_OVER:
-            return game.payoff()
+            return
 
         if game.player != player:
-            a = np.random.choice(range(NUM_ACTION), 1)[0]
+            a = self.get_sample_action(game)
+            # print(a)
+            # a = random.randint(0, NUM_ACTION-1)
+
             self.sampling_choices.put(a)
             next_game = deepcopy(game)
             next_game.act(a)
-            self.dfs(next_game, player)
+            self.dfs(next_game, player, dep+1)
         else:
             self.submit(game)
             for a in range(NUM_ACTION):
                 next_game = deepcopy(game)
                 next_game.act(a)
-                self.dfs(next_game, player)
+                self.dfs(next_game, player, dep+1)
 
     def cfr(self, game: Game, player):
         if game.change_state() == GAME_OVER:
@@ -72,6 +96,7 @@ class CFR:
             #     a = np.random.choice(range(NUM_ACTION), 1, p=strategy)[0]
 
             a = self.sampling_choices.get()
+
             next_game = deepcopy(game)
             next_game.act(a)
 
@@ -105,16 +130,24 @@ class CFR:
                 print(i, '/', max_iter, ':', acc_util / i)
 
     def search(self, max_iter):
+        self.samples = []
+        begin = time()
         for i in range(max_iter):
             # start = random.randint(0, NUM_PLAYER - 1)
             player = random.randint(0, NUM_PLAYER - 1)
             game = Game()
             self.games.put((player, game))
-            self.dfs(game, player)
+
+            self.max_dep = 0
+            self.cnt = 0
+            self.dfs(game, player, 0)
+            print(i, '/', max_iter, ': visited', self.cnt, ' max_depth', self.max_dep)
+
+        print('COST %s sec' % (time() - begin))
 
     def run(self, max_iter):
+        self.regrets = np.zeros(shape=(len(self.samples), NUM_ACTION))
         self.run_ptr = 0
         for i in range(max_iter):
             player, game = self.games.get()
             self.cfr(game, player)
-

@@ -115,44 +115,47 @@ int Calculator::power(int h0, int h1, int p0, int p1, int p2, int p3, int p4)
 }
 
 
-// int Calculator::potential_power(int *holes, int *pubs, int step)
-// {
-//     // TODO
-//     if(step == 3) return power(holes, pubs);
+int Calculator::potential_power(int h0, int h1, int p0, int p1, int p2, int p3, int p4, int step)
+{
+    // TODO
+    if(step == 3) return power(h0, h1, p0, p1, p2, p3, p4);
+	int holes[2] = {h0, h1};
+	int pubs[5] = {p0, p1, p2, p3, p4};
 
-//     int num = step == 0 ? 0 : 2 + step;
-//     memcpy(cards, holes, sizeof(int) * 2);
-//     memcpy(cards + 2, pubs, sizeof(int) * num);
-//     std::sort(cards, cards+num+2);
 
-//     ull key = 0;
-//     for(int i = 0; i < num+2; i++) key = key * 52 + cards[i];
-//     auto x = pp_cache.find(key);
-//     if(x != pp_cache.end()) return x->second;
+    int num = step == 0 ? 0 : 2 + step;
+    memcpy(cards, holes, sizeof(int) * 2);
+    memcpy(cards + 2, pubs, sizeof(int) * num);
+    std::sort(cards, cards+num+2);
 
-//     int iter = MC_ITER / (step + 1);
+    ull key = 0;
+    for(int i = 0; i < num+2; i++) key = key * 52 + cards[i];
+    auto x = pp_cache.find(key);
+    if(x != pp_cache.end()) return x->second;
 
-//     memset(mask, 0, sizeof(mask));
-//     mask[holes[0]] = true;
-//     mask[holes[1]] = true;
-//     int cnt = num;
+    int iter = MC_ITER / (step + 1);
 
-//     for(int i = 0; i < num; i++)
-//     {
-//         mask[pubs[i]] = true;
-//         cards[i] = pubs[i];
-//     }
+    memset(mask, 0, sizeof(mask));
+    mask[holes[0]] = true;
+    mask[holes[1]] = true;
+    int cnt = num;
 
-//     for(int i = 0; i < 52; i++) if(!mask[i]) cards[cnt++] = i;
+    for(int i = 0; i < num; i++)
+    {
+        mask[pubs[i]] = true;
+        cards[i] = pubs[i];
+    }
 
-//     ll res = 0;
-//     for(int i = 0; i < iter; i++)
-//     {
-//         std::shuffle(cards+num, cards+52, std::mt19937(std::random_device()()));
-//         res += (ll) power(holes, cards);
-//     }
-//     return pp_cache[key] = (int)(res / iter);
-// }
+    for(int i = 0; i < 52; i++) if(!mask[i]) cards[cnt++] = i;
+
+    ll res = 0;
+    for(int i = 0; i < iter; i++)
+    {
+        std::shuffle(cards+num, cards+52, std::mt19937(std::random_device()()));
+        res += (ll) power(holes[0], holes[1], cards[0], cards[1], cards[2], cards[3], cards[4]);
+    }
+    return pp_cache[key] = (int)(res / iter);
+}
 
 // int Calculator::opp_potential_power(int *holes, int *pubs, int step)
 // {

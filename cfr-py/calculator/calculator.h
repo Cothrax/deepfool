@@ -38,7 +38,7 @@ private:
     // 你也许需要初始化一些东西？
     void init();
     unordered_map<ull, int> pp_cache;
-    unordered_map<ull, int> opp_cache;
+    // unordered_map<ull, int> opp_cache;
 
 public:
     Calculator() { init(); }
@@ -55,14 +55,12 @@ public:
 
     // 玩家的先验期望牌力
     // 阶段 step (game.h)
-    // int potential_power(int *holes, int *pubs, int step);
+    int potential_power(int h0, int h1, int p0, int p1, int p2, int p3, int p4, int step);
 
     // 任一对手的先验期望牌力
     // 阶段 step (game.h)
     // int opp_potential_power(int *holes, int *pubs, int step);
 
 };
-
-extern Calculator calculator;
 
 #endif //DEEPFOOL_CALCULATOR_H

@@ -162,6 +162,9 @@ class Calculator(_object):
 
     def power(self, h0, h1, p0, p1, p2, p3, p4):
         return _MYCFR.Calculator_power(self, h0, h1, p0, p1, p2, p3, p4)
+
+    def potential_power(self, h0, h1, p0, p1, p2, p3, p4, step):
+        return _MYCFR.Calculator_potential_power(self, h0, h1, p0, p1, p2, p3, p4, step)
     __swig_destroy__ = _MYCFR.delete_Calculator
     __del__ = lambda self: None
 Calculator_swigregister = _MYCFR.Calculator_swigregister
@@ -169,5 +172,4 @@ Calculator_swigregister(Calculator)
 
 # This file is compatible with both classic and new-style classes.
 
-cvar = _MYCFR.cvar
 
