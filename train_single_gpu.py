@@ -20,8 +20,10 @@ def main(config_path):
     writer = SummaryWriter("runs/poker")
 
     # model
-    model_crt  = DF(6, 8)
-    model_last = DF(6, 8)
+    model_crt  = DF(6, 7)
+    model_last = DF(6, 7)
+    for p in model_last.parameters():
+        p.requires_grad = False
 
     # resume from a checkpoint
     if config["model"]["load"]:
@@ -70,7 +72,7 @@ def main(config_path):
                 "model": model_crt.state_dict(),
             }, config["general"]["save_path"] + "checkpoint_{}.pt".format(epoch+1))
 
-        model_last.load_state_dict(model_crt.state_dict().cpu())
+        model_last.load_state_dict(model_crt.state_dict())
 
         #lr_scheduler.step(epoch-config["general"]["start_epoch"])
 
@@ -85,10 +87,11 @@ def train(package):
      epoch] = package
 
     model.train()
-    feature, label = dataloader.__getitem__()
-    feature = feature.cuda()
+    holes, pubs, history, label = dataloader.__getitem__()
     label = label.cuda()
-    holes, pubs, history = feature
+    holes = holes.cuda()
+    pubs = pubs.cuda()
+    history = history.cuda()
     predict = model(holes, pubs, history)
     loss = criterion(predict, label)
     loss.backward()
@@ -96,8 +99,8 @@ def train(package):
     optimizer.zero_grad()
 
     if epoch % 10 == 0:
-        print("epoch: {} iteration: {}/{} loss: {:.6f}".format(epoch + 1, i, length, loss))
-        writer.add_scalars("train loss", {"sum": loss}, i + epoch * length)
+        print("epoch: {} loss: {:.6f}".format(epoch + 1, loss))
+        writer.add_scalars("train loss", {"sum": loss}, epoch+1)
 
 if __name__ == "__main__":
     main("./train.toml")

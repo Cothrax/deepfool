@@ -1,4 +1,4 @@
-from game import *
+from .game import *
 from copy import deepcopy, copy
 from queue import Queue
 import numpy as np
@@ -39,13 +39,14 @@ class CFR:
         self.T += 1
         mapping = {}
         for sample, regret in zip(self.samples, self.regrets):
-            if sample not in mapping:
-                mapping[sample] = np.zeros(NUM_ACTION)
-            else:
-                mapping[sample] += self.regrets
+            sample_tup =(tuple(sample[0]), tuple(sample[1]), tuple(sample[2].reshape(-1)))
+            if sample_tup not in mapping:
+                mapping[sample_tup] = np.zeros(NUM_ACTION)
+            mapping[sample_tup] += regret
 
         for sample, old in zip(self.samples, self.strategies):
-            regret_plus = np.max(np.vstack([mapping[sample], np.zerosf(NUM_ACTION)]), axis=0)
+            sample_tup =(tuple(sample[0]), tuple(sample[1]), tuple(sample[2].reshape(-1)))
+            regret_plus = np.max(np.vstack([mapping[sample_tup], np.zeros(NUM_ACTION)]), axis=0)
             tot = np.sum(regret_plus)
             if tot:
                 new = (regret_plus / tot + old * self.T) / (self.T + 1)
@@ -115,7 +116,7 @@ class CFR:
             return util
         else:
             node, strategy = self.get_strategy(game)
-            util = np.zeros(NUM_ACTION)
+            util = np.zeros(NUM_PLAYER)
             cv_util = np.zeros(NUM_ACTION)
             for a in range(NUM_ACTION):
                 next_game = deepcopy(game)
@@ -124,7 +125,7 @@ class CFR:
                 cv_util[a] = next_util[player]
                 util += strategy[a] * next_util
 
-            regret = cv_util - util
+            regret = cv_util - util[player]
             self.update_strategy(node, regret)
             return util
 
@@ -162,3 +163,4 @@ class CFR:
         for i in range(max_iter):
             player, game = self.games.get()
             self.cfr(game, player)
+        self.generate_learning_samples()

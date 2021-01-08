@@ -21,28 +21,33 @@ class POKER_DATASET(object):
         samples = self.cfr.samples
 
         holes, pubs, history_ = zip(*samples)
-        holes = torch.from_numpy(np.array(holes))
-        pubs = torch.from_numpy(np.array(pubs))
+        holes = torch.from_numpy(np.array(holes).astype(np.int64))
+        pubs = torch.from_numpy(np.array(pubs).astype(np.int64))
+        '''
         history = []
         for h in history_:
             h = h.T
-            if h.shape(0) >= self.max_history:
+            if h.shape[0] >= self.max_history:
                 h = h[:self.max_history]
             else:
                 h = np.pad(h, ((0, self.max_history-h.shape(0)), (0,0)))
             history.append(h)
         history = np.array(history)
+        '''
+        history = np.array(history_).astype(np.float32)
         history = torch.from_numpy(history)
-        input("check samples of shape {}".format(history.shape))
+        #input("check samples of shape {}".format(history.shape))
         old_label = self.model(holes, pubs, history)
+        #print(old_label[:10])
 
         self.cfr.strategies = old_label.numpy()
-        self.run(self.max_iter)
+        self.cfr.run(self.max_iter)
 
         samples, new = zip(*self.cfr.labels)
         holes, pubs, history_ = zip(*samples)
-        holes = torch.from_numpy(np.array(holes))
-        pubs = torch.from_numpy(np.array(pubs))
+        holes = torch.from_numpy(np.array(holes).astype(np.int64))
+        pubs = torch.from_numpy(np.array(pubs).astype(np.int64))
+        '''
         history = []
         for h in history_:
             h = h.T
@@ -51,12 +56,13 @@ class POKER_DATASET(object):
             else:
                 h = np.pad(h, ((0, self.max_history-h.shape(0)), (0,0)))
             history.append(h)
-        history = np.array(history)
+        '''
+        history = np.array(history_).astype(np.float32)
         history = torch.from_numpy(history)
-        input("check samples of shape {}".format(history.shape))
+        #input("check samples of shape {}".format(history.shape))
         new = torch.from_numpy(np.array(new))
 
-        return (holes, pubs, history), new
+        return holes, pubs, history, new
 
     
     def __len(self):

@@ -13,12 +13,14 @@ class CardEmbedding(nn.Module):
         batch_size, num_cards = X.shape
         Y = X.view(-1)
 
-        valid = Y.ge(0).float()
+        valid = Y > 0
         Y = Y.clamp(min=0)
-        embs = self.card(Y) + self.rank(x // 4) + self.suit(x % 4)
+        embs = self.card(Y) + self.rank(Y // 4) + self.suit(Y % 4)
+        #print(embs.shape)
+        valid = valid.view(-1, 1)
         embs = embs * valid
 
-        return embs.view(batch_size, num_cards, -1).sum(1)
+        return embs.view(batch_size, num_cards, -1).sum(dim=1)
 
 class Card(nn.Module):
     def __init__(self, dim):
@@ -33,9 +35,9 @@ class Card(nn.Module):
             nn.Linear(192, dim),
             nn.ReLU(True)
         )
-    def forward(card1, card2):
-        f1 = self.embed1(card1).sum(dim=2)
-        f2 = self.embed2(card2).sum(dim=2)
+    def forward(self, card1, card2):
+        f1 = self.embed1(card1)
+        f2 = self.embed2(card2)
         f3 = torch.cat([f1, f2], dim=1)
         f4 = self.fc(f3)
 
@@ -53,7 +55,7 @@ class History_Act(nn.Module):
         self.gru.flatten_parameters()
         out, _ = self.gru(X) # use output instead of hidden state
         out = self.fc(out)
-        out = self.relu(out)
+        out = self.relu(out).mean(dim=1)
 
         return out
 
@@ -67,18 +69,17 @@ class DF(nn.Module):
         self.post_process = nn.Sequential(
             nn.Linear(2*dim, dim),
             nn.ReLU(True),
-            nn.Linear(dim, num_action),
+            nn.Linear(dim, dim),
             nn.ReLU(True),
             nn.Linear(dim, num_action),
             nn.Softmax()
         )
 
-    def forward(self, card, history):# history = [history of action and pot]
+    def forward(self, card1, card2, history):# history = [history of action and pot]
         # card1 of shape(B, 2)
         # card2 of shape(B, 5)
         # history of shape (B, 16, 6)
 
-        card1, card2 = card
         f1 = self.card(card1, card2)
         f2 = self.hist_rnn(history)
         f3 = torch.cat([f1, f2], dim=1)
