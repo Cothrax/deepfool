@@ -28,12 +28,10 @@ class CFR:
         if game.step:
             num_card = game.step + 2
             pubs[:num_card] = game.pubs[:num_card]
+        history = np.zeros((8,12))
         history = game.history
-        # history[game.player].append(-1)
-        # history = np.array(game.history)
         sample = [holes, pubs, history]
         self.samples.append(sample)
-        #self.samples = np.append(self.samples, sample, axis=0)
   
     def generate_learning_samples(self):
         self.T += 1
@@ -52,7 +50,6 @@ class CFR:
                 new = (regret_plus / tot + old * self.T) / (self.T + 1)
                 label = [sample, new]
                 self.labels.append(label)
-                #self.labels = np.append(self.labels, label, axis=0)
 
     def get_strategy(self, game):
         ret = self.run_ptr
