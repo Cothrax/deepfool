@@ -1,7 +1,7 @@
 
 import numpy as np
 import random
-from .calculator import MYCFR
+from calculator import MYCFR
 
 SHOW = False
 
@@ -67,7 +67,8 @@ class Game:
         self.chips[self.big_blind] -= BIG_BLIND
 
         self.player = (self.big_blind + 1) % NUM_PLAYER
-        self.history = [[] for _ in range(NUM_PLAYER)]
+        # self.history = [[] for _ in range(NUM_PLAYER)]
+        self.history = -np.ones(shape=(4, NUM_PLAYER))
         self.generate()
 
     def generate(self):
@@ -121,21 +122,22 @@ class Game:
             self.bet(INIT_CHIPS)
 
         self.cur_bet = max(self.cur_bet, self.bets[self.player])
+        self.history[self.step, self.player] = a
 
-        self.history[self.player].append(a)
+        # self.history[self.player].append(a)
         self.player = (self.player + 1) % NUM_PLAYER
         while self.folds[self.player]:
-            self.history[self.player].append(-1)
+            # self.history[self.player].append(-1)
             self.player = (self.player + 1) % NUM_PLAYER
 
     def _change_state(self):
         self.pot += np.sum(self.bets)
         self.bets[:] = 0
-        max_len = np.max([len(x) for x in self.history])
-        for i in range(NUM_PLAYER):
-            if len(self.history[i]) != max_len:
-                det = max_len - len(self.history[i])
-                self.history[i].extend([-1] * det)
+        # max_len = np.max([len(x) for x in self.history])
+        # for i in range(NUM_PLAYER):
+        #     if len(self.history[i]) != max_len:
+        #         det = max_len - len(self.history[i])
+        #         self.history[i].extend([-1] * det)
         self.player = self.big_blind
         self.step += 1
 

@@ -1,4 +1,4 @@
-from .game import *
+from game import *
 from copy import deepcopy, copy
 from queue import Queue
 import numpy as np
@@ -23,14 +23,14 @@ class CFR:
         self.max_dep = 0
 
     def submit(self, game):
-        holes = game.holes
+        holes = game.holes[game.player]
         pubs = np.ones(5) * -1
         if game.step:
             num_card = game.step + 2
             pubs[:num_card] = game.pubs[:num_card]
         history = game.history
-        history[game.player].append(-1)
-        history = np.array(game.history)
+        # history[game.player].append(-1)
+        # history = np.array(game.history)
         sample = [holes, pubs, history]
         self.samples.append(sample)
         #self.samples = np.append(self.samples, sample, axis=0)

@@ -2,7 +2,7 @@
 FLAGS = -fPIC
 
 # the python interface through swig
-PYTHONI = -I/usr/include/python3.7/
+PYTHONI = -I/usr/include/python3.6m/
 PYTHONL = -Xlinker -export-dynamic
 
 # cpp file
