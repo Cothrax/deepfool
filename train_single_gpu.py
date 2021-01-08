@@ -37,7 +37,7 @@ def main(config_path):
 
 
     # data
-    dataset_train = data.POKER_DATASET(model_last, 10, 4)
+    dataset_train = data.POKER_DATASET(model_last, config["general"]["max_iter"], 4)
     dataloader_train = dataset_train
     '''
     dataloader_train = Data.DataLoader(dataset_train, batch_size=1, shuffle=False, pin_memory=True,
