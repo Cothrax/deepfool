@@ -19,14 +19,15 @@ def test_games():
 
 def test_dfs():
     cfr = CFR()
-    cfr.search(10)
+    cfr.search(30)
 
     sample_size = len(cfr.samples)
     cfr.strategies = np.random.random(size=(sample_size, NUM_ACTION))
 
     cfr.strategies /= np.repeat(np.sum(cfr.strategies, axis=1).reshape(-1, 1), NUM_ACTION, axis=1)
 
-    cfr.run(10)
+    cfr.run(30)
+
 
 if __name__ == '__main__':
-    test_games()
+    test_dfs()

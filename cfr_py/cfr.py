@@ -4,9 +4,11 @@ from queue import Queue
 import numpy as np
 from time import time
 
+FOLD_NUM = 10
+
 
 class CFR:
-    #__slots__ = ['sampling_choices', 'games', 'strategies',
+    # __slots__ = ['sampling_choices', 'games', 'strategies',
     #             'samples', 'regrets', 'run_ptr', 'T', 'labels']
 
     def __init__(self):
@@ -36,11 +38,16 @@ class CFR:
   
     def generate_learning_samples(self):
         mapping = {}
+        repeat_num = 0
         for sample, regret in zip(self.samples, self.regrets):
             sample_tup = (tuple(sample[0]), tuple(sample[1]), tuple(sample[2].reshape(-1)))
             if sample_tup not in mapping:
                 mapping[sample_tup] = np.zeros(NUM_ACTION)
+            else:
+                repeat_num += 1
             mapping[sample_tup] += regret
+
+        print('repeat num:', repeat_num, '/', len(self.samples))
 
         for sample, old in zip(self.samples, self.strategies):
             sample_tup = (tuple(sample[0]), tuple(sample[1]), tuple(sample[2].reshape(-1)))
@@ -49,12 +56,24 @@ class CFR:
                 regret_plus = np.max(np.vstack([regret, np.zeros(NUM_ACTION)]), axis=0)
                 tot = np.sum(regret_plus)
                 if tot:
-                    new = (regret_plus / tot + old * self.T) / (self.T + 1)
+                    k = self.T // 2
+                    new = (regret_plus / tot + old * k) / (k + 1)
                     label = [sample, new]
                     self.labels.append(label)
+                    # print(sample)
+                    # print(new)
+
                     # self.labels = np.append(self.labels, label, axis=0)
                 mapping[sample_tup] = None
 
+        print('-------------------- learning samples --------------------')
+        output = random.choices(self.labels, k=5)
+        for e in output:
+            print('X:', e[0])
+            print('y:', e[1])
+        print('-------------------- learning samples --------------------')
+
+        pass
         self.T += 1
 
     def get_strategy(self, game):
@@ -184,3 +203,18 @@ class CFR:
             print(i, '/', max_iter, ': cfr visits', self.cnt)
 
         self.generate_learning_samples()
+
+
+class RealCFR:
+    def __init__(self):
+        self.T = 0
+        self.sampling_choices = Queue()
+        self.games = Queue()
+
+        self.run_ptr = 0
+        self.strategies = None
+        self.regrets = None
+        self.samples = []
+        self.labels = []
+        self.cnt = 0
+        self.max_dep = 0
