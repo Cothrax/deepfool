@@ -1,4 +1,4 @@
-from .game import *
+from game import *
 from copy import deepcopy, copy
 from queue import Queue
 import numpy as np
@@ -33,26 +33,30 @@ class CFR:
         # history = np.array(game.history)
         sample = [holes, pubs, history]
         self.samples.append(sample)
-        #self.samples = np.append(self.samples, sample, axis=0)
+        # self.samples = np.append(self.samples, sample, axis=0)
   
     def generate_learning_samples(self):
-        self.T += 1
         mapping = {}
         for sample, regret in zip(self.samples, self.regrets):
-            sample_tup =(tuple(sample[0]), tuple(sample[1]), tuple(sample[2].reshape(-1)))
+            sample_tup = (tuple(sample[0]), tuple(sample[1]), tuple(sample[2].reshape(-1)))
             if sample_tup not in mapping:
                 mapping[sample_tup] = np.zeros(NUM_ACTION)
             mapping[sample_tup] += regret
 
         for sample, old in zip(self.samples, self.strategies):
-            sample_tup =(tuple(sample[0]), tuple(sample[1]), tuple(sample[2].reshape(-1)))
-            regret_plus = np.max(np.vstack([mapping[sample_tup], np.zeros(NUM_ACTION)]), axis=0)
-            tot = np.sum(regret_plus)
-            if tot:
-                new = (regret_plus / tot + old * self.T) / (self.T + 1)
-                label = [sample, new]
-                self.labels.append(label)
-                #self.labels = np.append(self.labels, label, axis=0)
+            sample_tup = (tuple(sample[0]), tuple(sample[1]), tuple(sample[2].reshape(-1)))
+            regret = mapping[sample_tup]
+            if regret is not None:
+                regret_plus = np.max(np.vstack([regret, np.zeros(NUM_ACTION)]), axis=0)
+                tot = np.sum(regret_plus)
+                if tot:
+                    new = (regret_plus / tot + old * self.T) / (self.T + 1)
+                    label = [sample, new]
+                    self.labels.append(label)
+                    # self.labels = np.append(self.labels, label, axis=0)
+                mapping[sample_tup] = None
+
+        self.T += 1
 
     def get_strategy(self, game):
         ret = self.run_ptr
@@ -70,7 +74,11 @@ class CFR:
         #     int(game.pubs[2]), int(game.pubs[3]), int(game.pubs[4]),
         #     game.step
         # )
-        a = np.random.choice(range(NUM_ACTION), 1, p=init_prob)
+        if game.is_raise_allowed():
+            a = np.random.choice(range(NUM_ACTION), 1, p=init_prob)
+        else:
+            a = np.random.choice(range(2), 1, p=init_prob[:2]/np.sum(init_prob[:2]))
+
         return a
 
     def dfs(self, game: Game, player, dep):
@@ -94,12 +102,14 @@ class CFR:
             self.dfs(next_game, player, dep+1)
         else:
             self.submit(game)
-            for a in range(NUM_ACTION):
+            legal_action = range(NUM_ACTION) if game.is_raise_allowed() else range(2)
+            for a in legal_action:
                 next_game = deepcopy(game)
                 next_game.act(a)
                 self.dfs(next_game, player, dep+1)
 
     def cfr(self, game: Game, player):
+        self.cnt += 1
         if game.change_state() == GAME_OVER:
             return game.payoff()
 
@@ -108,7 +118,6 @@ class CFR:
             #     a = np.random.choice(range(NUM_ACTION), 1, p=strategy)[0]
 
             a = self.sampling_choices.get()
-
             next_game = deepcopy(game)
             next_game.act(a)
 
@@ -116,9 +125,15 @@ class CFR:
             return util
         else:
             node, strategy = self.get_strategy(game)
+            legal_action = range(NUM_ACTION)
+            if not game.is_raise_allowed():
+                strategy[2:] = 0
+                strategy /= np.sum(strategy)
+                legal_action = range(2)
+
             util = np.zeros(NUM_PLAYER)
             cv_util = np.zeros(NUM_ACTION)
-            for a in range(NUM_ACTION):
+            for a in legal_action:
                 next_game = deepcopy(game)
                 next_game.act(a)
                 next_util = self.cfr(next_game, player)
@@ -126,6 +141,9 @@ class CFR:
                 util += strategy[a] * next_util
 
             regret = cv_util - util[player]
+            if not game.is_raise_allowed():
+                regret[2:] = -float('inf')
+
             self.update_strategy(node, regret)
             return util
 
@@ -162,5 +180,8 @@ class CFR:
         self.run_ptr = 0
         for i in range(max_iter):
             player, game = self.games.get()
+            self.cnt = 0
             self.cfr(game, player)
+            print(i, '/', max_iter, ': cfr visits', self.cnt)
+
         self.generate_learning_samples()

@@ -6,8 +6,10 @@ import random
 def test_games():
     game = Game()
     while game.change_state() != GAME_OVER:
-        # act = int(input('enter action: '))
-        act = random.randint(0, NUM_ACTION-1)
+        if not game.is_raise_allowed():
+            print('[raise not allowed]')
+        act = int(input('enter action: '))
+        # act = random.randint(0, NUM_ACTION-1)
         game.act(act)
     print(game.payoff())
 
@@ -15,8 +17,13 @@ def test_games():
 def test_dfs():
     cfr = CFR()
     cfr.search(10)
-    print(len(cfr.samples))
 
+    sample_size = len(cfr.samples)
+    cfr.strategies = np.random.random(size=(sample_size, NUM_ACTION))
+
+    cfr.strategies /= np.repeat(np.sum(cfr.strategies, axis=1).reshape(-1, 1), NUM_ACTION, axis=1)
+
+    cfr.run(10)
 
 if __name__ == '__main__':
-    test_dfs()
+    test_games()
