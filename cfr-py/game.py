@@ -1,7 +1,7 @@
 
 import numpy as np
 import random
-
+from calculator import MYCFR
 
 NUM_PLAYER = 6
 NUM_ACTION = 7
@@ -26,13 +26,13 @@ RIVER = 3
 GAME_OVER = 4
 NUM_STATE = 5
 
-calculator = Calculator()
+calculator = MYCFR.Calculator()
 
 
 class Game:
     __slots__ = ['holes', 'pubs', 'start', 'big_blind', 'bets',
                  'chips', 'folds', 'power', 'step', 'num', 'pot',
-                 'cur_bet', 'player']
+                 'cur_bet', 'player', 'history']
 
     def __init__(self, start):
         self.holes = -np.ones(shape=(NUM_PLAYER, 2), dtype=np.int)
@@ -56,6 +56,7 @@ class Game:
         self.chips[self.start] -= BIG_BLIND
 
         self.player = (self.big_blind + 1) % NUM_PLAYER
+        self.history = [[] for _ in range(NUM_PLAYER)]
         self.generate()
 
     def generate(self):
@@ -90,8 +91,10 @@ class Game:
         elif a == ALL_IN:
             self.bet(INIT_CHIPS)
 
+        self.history[self.player].append(a)
         self.player = (self.player + 1) % NUM_PLAYER
         while self.folds[self.player]:
+            self.history[self.player].append(-1)
             self.player = (self.player + 1) % NUM_PLAYER
 
     def change_state(self):
@@ -103,6 +106,12 @@ class Game:
         v = self.bets[not self.folds and (self.chips > 0)]
         if np.max(v) != np.min(v):
             return NO_CHANGE
+
+        max_len = np.max([len(x) for x in self.history])
+        for i in range(NUM_PLAYER):
+            if len(self.history[i] != max_len):
+                det = max_len - len(self.history[i])
+                self.history.extend([-1] * det)
 
         self.player = self.big_blind
         self.pot += np.sum(self.bets)

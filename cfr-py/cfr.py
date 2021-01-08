@@ -1,28 +1,44 @@
 from game import *
-from copy import deepcopy
+from copy import deepcopy, copy
 from queue import Queue
 import numpy as np
 
 
 class CFR:
     __slots__ = ['sampling_choices', 'games', 'strategies',
-                 'samples', 'regrets', 'run_ptr']
+                 'samples', 'regrets', 'run_ptr', 'T']
 
     def __init__(self):
+        self.T = 0
         self.sampling_choices = Queue()
         self.games = Queue()
 
         self.run_ptr = 0
         self.strategies = None
         self.samples = None
-        self.regrets = None
 
-    def submit(self, game, history):
+    def submit(self, game):
         # TODO submit to samples
         sample = None
         self.samples = np.append(self.samples, [sample], axis=0)
 
-    def get_strategy(self, game, history):
+    def generate_learning_samples(self):
+        self.T += 1
+        mapping = {}
+        for sample, regret in zip(self.samples, self.regrets):
+            if sample not in mapping:
+                mapping[sample] = np.zeros(NUM_ACTION)
+            else:
+                mapping[sample] += self.regrets
+
+        for sample, old in zip(self.samples, self.strategies):
+            regret_plus = np.max(np.vstack([mapping[sample], np.zerosf(NUM_ACTION)]), axis=0)
+            tot = np.sum(regret_plus)
+            if tot:
+                new = (regret_plus / tot + old * self.T) / (self.T + 1)
+                # TODO (sample, new)
+
+    def get_strategy(self, game):
         ret = self.run_ptr
         self.run_ptr += 1
         return ret, self.strategies[ret]
@@ -30,26 +46,24 @@ class CFR:
     def update_strategy(self, node, regret):
         self.regrets[node] = regret
 
-    def dfs(self, game: Game, history, player):
+    def dfs(self, game: Game, player):
         if game.change_state() == GAME_OVER:
             return game.payoff()
 
         if game.player != player:
             a = np.random.choice(range(NUM_ACTION), 1)[0]
+            self.sampling_choices.put(a)
             next_game = deepcopy(game)
             next_game.act(a)
-            self.dfs(next_game,
-                     history + str(game.player) + str(a), player)
+            self.dfs(next_game, player)
         else:
-            self.submit(game, history)
+            self.submit(game)
             for a in range(NUM_ACTION):
                 next_game = deepcopy(game)
                 next_game.act(a)
-                self.dfs(next_game,
-                         history + str(game.player) + str(a),
-                         player)
+                self.dfs(next_game, player)
 
-    def cfr(self, game: Game, history, player):
+    def cfr(self, game: Game, player):
         if game.change_state() == GAME_OVER:
             return game.payoff()
 
@@ -60,20 +74,17 @@ class CFR:
             a = self.sampling_choices.get()
             next_game = deepcopy(game)
             next_game.act(a)
-            util = self.cfr(next_game,
-                            history + str(game.player) + str(a),
-                            player)
+
+            util = self.cfr(next_game, player)
             return util
         else:
-            node, strategy = self.get_strategy(game, history)
+            node, strategy = self.get_strategy(game)
             util = np.zeros(NUM_ACTION)
             cv_util = np.zeros(NUM_ACTION)
             for a in range(NUM_ACTION):
                 next_game = deepcopy(game)
                 next_game.act(a)
-                next_util = self.cfr(next_game,
-                                     history + str(game.player) + str(a),
-                                     player)
+                next_util = self.cfr(next_game, player)
                 cv_util[a] = next_util[player]
                 util += strategy[a] * next_util
 
@@ -88,7 +99,7 @@ class CFR:
             player = random.randint(0, NUM_PLAYER-1)
 
             game = Game(start)
-            acc_util += self.cfr(game, '', player)
+            acc_util += self.cfr(game, player)
 
             if i and i % 10000 == 0:
                 print(i, '/', max_iter, ':', acc_util / i)
@@ -99,11 +110,11 @@ class CFR:
             player = random.randint(0, NUM_PLAYER - 1)
             game = Game(start)
             self.games.put((player, game))
-            self.dfs(game, '', player)
+            self.dfs(game, player)
 
     def run(self, max_iter):
         self.run_ptr = 0
         for i in range(max_iter):
             player, game = self.games.get()
-            self.cfr(game, '', player)
+            self.cfr(game, player)
 
