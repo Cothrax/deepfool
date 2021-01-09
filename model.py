@@ -78,7 +78,8 @@ class DF(nn.Module):
     def forward(self, card1, card2, history):# history = [history of action and pot]
         #print(history[:10])
         #input("check")
-        print("history size: {}".format(history.shape))
+        #print("history size: {}".format(history.shape))
+
         # card1 of shape(B, 2)
         # card2 of shape(B, 5)
         # history of shape (B, 4, 18)
@@ -89,3 +90,12 @@ class DF(nn.Module):
         f4 = self.post_process(f3)
 
         return f4
+    
+    def ask(self, sample):
+        # sample = [holes, pubs, history]
+        holes, pubs, history = sample
+        holes = torch.from_numpy(holes).unsqueeze(dim=0)
+        pubs = torch.from_numpy(pubs).unsqueeze(dim=0)
+        history = torch.from_numpy(history).unsqueeze(dim=0)
+
+        return self.forward(holes, pubs, history)

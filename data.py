@@ -60,7 +60,7 @@ class POKER_DATASET(object):
         history = np.array(history_).astype(np.float32)
         history = torch.from_numpy(history)
         #input("check samples of shape {}".format(history.shape))
-        new = torch.from_numpy(np.array(new))
+        new = torch.from_numpy(np.array(new).astype(np.float32))
 
         return holes, pubs, history, new
 
