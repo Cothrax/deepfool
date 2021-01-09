@@ -1,7 +1,7 @@
 import numpy as np
-from params import *
+from .params import *
 from multiprocessing import Pool, Process
-from cfr import CFR
+from .cfr import CFR
 from time import time
 
 

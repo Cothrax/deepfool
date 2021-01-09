@@ -1,7 +1,7 @@
 import numpy as np
 # for CFR
-FOLD_NUM = 100
-N_CPU = 8
+FOLD_NUM = 10
+N_CPU = 10
 
 # for DBEUG
 SHOW = False

@@ -1,10 +1,10 @@
-from params import *
-from game import *
+from .params import *
+from .game import *
 from copy import deepcopy, copy
 from queue import Queue
 from time import time
 import numpy as np
-from cfr import CFR
+from .cfr import CFR
 from multiprocessing import Pool, Process
 
 
@@ -82,7 +82,7 @@ class PureCFR(CFR):
 
         for i in range(max_iter):
             player = 5
-            game = Game(start=random.randint(0, NUM_PLAYER-1))
+            game = Game(start=random.randint(0, NUM_PLAYER - 1))
             self.cnt = 0
             self.cfr(game, player)
             print(i, '/', max_iter, ': cfr visits', self.cnt)

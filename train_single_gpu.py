@@ -17,21 +17,24 @@ def main(config_path):
     global iteration
     iteration = 1
     cudnn.benchmark = True
+    torch.set_num_threads(1)
 
     config = toml.load(config_path)
     writer = SummaryWriter("runs/poker")
 
     # model
     model_crt  = DF(18, 6)
-    model_last = DF(18, 6)
-    for p in model_last.parameters():
-        p.requires_grad = False
+    model_last = [DF(18, 6)] * config["general"]["num_cfr"]
+    for m in model_last:
+        for p in m.parameters():
+            p.requires_grad = False
 
     # resume from a checkpoint
     if config["model"]["load"]:
-        checkpoint = torch.load(config["general"]["load_path"])
+        checkpoint = torch.load(config["model"]["load_path"])
         model_crt.load_state_dict(checkpoint['model'])
-        model_last.load_state_dict(checkpoint['model'])
+        for m in model_last:
+            m.load_state_dict(checkpoint['model'])
         print("successfully load model")
 
     model_crt.cuda()
@@ -39,7 +42,7 @@ def main(config_path):
 
 
     # data
-    dataset_train = data.POKER_DATASET(model_last, config["general"]["max_search_iter"], 4)
+    dataset_train = data.POKER_DATASET(model_last, config["general"]["max_search_iter"])
     dataloader_train = dataset_train
     '''
     dataloader_train = Data.DataLoader(dataset_train, batch_size=1, shuffle=False, pin_memory=True,
@@ -74,7 +77,8 @@ def main(config_path):
             }, config["model"]["save_path"] + "checkpoint_{}.pt".format(iteration))
             print("save model successfully")
 
-        model_last.load_state_dict(model_crt.state_dict())
+        for m in model_last:
+            m.load_state_dict(model_crt.state_dict())
 
         #lr_scheduler.step(epoch-config["general"]["start_epoch"])
 
