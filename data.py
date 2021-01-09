@@ -7,27 +7,32 @@ import pickle
 import random
 import numpy as np
 import torch.utils.data as Data
-#from cfr_py.mp_cfr import ParallelCFR
+from cfr_py.mp_cfr import ParallelCFR
 from cfr_py.pure_cfr import ParallelPureCFR
 
 class POKER_DATASET(object):
-    def __init__(self, model, max_iter):
-        self.model_list = model
-        self.cfr = ParallelPureCFR(len(self.model_list), max_iter, self.model_list)
+    def __init__(self, model, max_iter, straight_sampling):
+        self.straight_sampling = straight_sampling
+        if self.straight_sampling:
+            self.model = model
+            self.cfr = ParallelCFR(6, max_iter)
+        else:
+            self.model_list = model
+            self.cfr = ParallelPureCFR(len(self.model_list), max_iter, self.model_list)
     
     def __getitem__(self):
+        if self.straight_sampling:
+            self.cfr.parallel_search()
+            for cfr in self.cfr.cfr_list:
+                holes, pubs, history_ = zip(*cfr.samples)
+                holes = torch.from_numpy(np.array(holes).astype(np.int64))
+                pubs = torch.from_numpy(np.array(pubs).astype(np.int64))
+                history = np.array(history_).astype(np.float32)
+                history = torch.from_numpy(history)
+                old_label = self.model(holes, pubs, history)
+                cfr.strategies = old_label.numpy()
+
         self.cfr.parallel_run()
-        '''
-        for cfr in self.cfr.cfr_list:
-            holes, pubs, history_ = zip(*cfr.samples)
-            holes = torch.from_numpy(np.array(holes).astype(np.int64))
-            pubs = torch.from_numpy(np.array(pubs).astype(np.int64))
-            history = np.array(history_).astype(np.float32)
-            history = torch.from_numpy(history)
-            old_label = self.model(holes, pubs, history)
-            cfr.strategies = old_label.numpy()
-        self.cfr.parallel_run()
-        '''
 
         all_holes, all_pubs, all_history, all_new = [], [], [], []
         for cfr in self.cfr.cfr_list:
@@ -48,5 +53,5 @@ class POKER_DATASET(object):
 
         return holes, pubs, history, new
     
-    def __len(self):
+    def __len__(self):
         return 10

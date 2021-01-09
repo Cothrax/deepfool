@@ -65,7 +65,13 @@ class DF(nn.Module):
         super().__init__()
         self.card = Card(dim)
 
-        self.hist_rnn = History_Act(history_size, dim, dim)
+        #self.hist_rnn = History_Act(history_size, dim, dim)
+        self.hist_fc = nn.Sequential(
+            nn.Linear(4*18, dim),
+            nn.ReLU(True),
+            nn.Linear(dim, dim),
+            nn.ReLU(True),
+        )
 
         self.post_process = nn.Sequential(
             nn.Linear(2*dim, dim),
@@ -86,7 +92,8 @@ class DF(nn.Module):
         # history of shape (B, 4, 18)
 
         f1 = self.card(card1, card2)
-        f2 = self.hist_rnn(history)
+        #f2 = self.hist_rnn(history)
+        f2 = self.hist_fc(history.view(card1.shape[0], -1))
         f3 = torch.cat([f1, f2], dim=1)
         f4 = self.post_process(f3)
 

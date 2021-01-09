@@ -88,6 +88,8 @@ class PureCFR(CFR):
             print(i, '/', max_iter, ': cfr visits', self.cnt)
         if if_generate:
             self.generate_learning_samples()
+            #print(i, '/', max_iter, ': cfr visits', self.cnt)
+        self.generate_learning_samples()
 
         return self
 
