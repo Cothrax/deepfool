@@ -1,12 +1,12 @@
 //
 // Created by cothrax on 1/5/21.
 //
-// 不会c++,就写了个C。接口应该没问题。正确性还没大量验证。
 
 #include "calculator.h"
 #include <algorithm>
 #include <cstring>
 #include <random>
+#include <ctime>
 
 
 void Calculator::gen_cp(Card_power * cp, CType tp, int c1,int c2, int c3, int c4, int c5)
@@ -90,12 +90,8 @@ void Calculator::init()
 }
 
 #define ISFLUSH(c1,c2,c3,c4,c5) ((c1)==(c2)&&(c2)==(c3)&&(c3)==(c4)&&(c4)==(c5))
-int Calculator::power(int h0, int h1, int p0, int p1, int p2, int p3, int p4)
+int Calculator::_power(int * holes, int* pubs)
 {
-	int holes[2] = {h0, h1};
-	int pubs[5] = {p0, p1, p2, p3, p4};
-	
-    
     int cards[7] = {holes[0]%13,holes[1]%13,pubs[0]%13,pubs[1]%13,pubs[2]%13,pubs[3]%13,pubs[4]%13};
     int suits[7] = {holes[0]/13,holes[1]/13,pubs[0]/13,pubs[1]/13,pubs[2]/13,pubs[3]/13,pubs[4]/13};
     int i[5];
@@ -112,6 +108,12 @@ int Calculator::power(int h0, int h1, int p0, int p1, int p2, int p3, int p4)
                             max_power = power;
                     }
     return max_power;
+}
+int Calculator::power(int h0, int h1, int p0, int p1, int p2, int p3, int p4)
+{
+	int holes[2] = {h0, h1};
+	int pubs[5] = {p0, p1, p2, p3, p4};
+	return _power(holes,pubs);
 }
 
 
@@ -191,3 +193,62 @@ int Calculator::potential_power(int h0, int h1, int p0, int p1, int p2, int p3, 
 //     return opp_cache[key] = (int)(res / MC_ITER);
 // }
 
+#define USE_CACHE
+double Calculator::prior_win_rate(int h0, int h1, int p0, int p1, int p2, int p3, int p4, int step,int MCtimes)
+{
+    int holes[2] = {h0, h1};
+	int pubs[5] = {p0, p1, p2, p3, p4};
+    if(step>0) step += 2;
+#ifdef USE_CACHE
+    ull key = step;
+    for(int i = 0; i < 2; i++) key = key * 52 + holes[i];
+    for(int i = 0; i < step; i++) key = key * 52 + pubs[i];
+    auto x = pwr_cache.find(key);
+    if(x != pwr_cache.end()) return x->second;
+#endif
+    const int NOP = 5;
+    int pool[52];
+    int sp = 0;
+    for(int i=0;i<52;i++){
+        int conflict = 0;
+        for(int j=0;j<step;j++)
+            if(i==pubs[j]){
+                conflict = 1;
+                break;
+            }
+        if(i==holes[0]||i==holes[1]||conflict>0)
+            continue;
+        pool[sp++] = i;
+    }
+
+    std::default_random_engine e;
+    e.seed(time(NULL));
+
+    int MCpub[5];
+    if(step>0)
+        memcpy(MCpub,pubs,step*sizeof(int));
+
+    int wins,ties,loses;
+    wins = ties = loses = 0;
+
+    for(int i=0;i<MCtimes;i++){
+        std::shuffle(pool,pool+sp,e);
+        if(step<5)
+            memcpy(MCpub+step,pool,(5-step)*sizeof(int));
+        int max_oppower = 0;
+        for(int j=0;j<NOP;j++){
+            int oppower = _power(pool+5-step+2*j,MCpub);
+            if(oppower>max_oppower)
+                max_oppower = oppower;
+        }
+        int mypower = _power(holes,MCpub);
+        ties += mypower == max_oppower;
+        wins += mypower > max_oppower;
+        loses += mypower < max_oppower;
+    }
+    double rate = (wins*1.0 + ties*1.0/2)/MCtimes;
+#ifdef USE_CACHE
+    pwr_cache[key] = rate;
+#endif
+    return rate;
+}
