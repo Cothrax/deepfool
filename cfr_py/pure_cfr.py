@@ -76,8 +76,8 @@ class PureCFR(CFR):
         self.labels = []
 
         for i in range(max_iter):
-            player = random.randint(0, NUM_PLAYER - 1)
-            game = Game()
+            player = 5
+            game = Game(start=random.randint(0, NUM_PLAYER - 1))
             self.cnt = 0
             self.cfr(game, player)
             print(i, '/', max_iter, ': cfr visits', self.cnt)

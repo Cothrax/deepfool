@@ -17,6 +17,7 @@ def main(config_path):
     global iteration
     iteration = 1
     cudnn.benchmark = True
+    torch.set_num_threads(1)
 
     config = toml.load(config_path)
     writer = SummaryWriter("runs/poker")
@@ -30,7 +31,7 @@ def main(config_path):
 
     # resume from a checkpoint
     if config["model"]["load"]:
-        checkpoint = torch.load(config["general"]["load_path"])
+        checkpoint = torch.load(config["model"]["load_path"])
         model_crt.load_state_dict(checkpoint['model'])
         for m in model_last:
             m.load_state_dict(checkpoint['model'])
