@@ -172,6 +172,7 @@ class CFR:
 
     def search(self, max_iter):
         self.samples = []
+        self.labels = []
         begin = time()
         for i in range(max_iter):
             # start = random.randint(0, NUM_PLAYER - 1)

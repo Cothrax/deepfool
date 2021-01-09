@@ -47,7 +47,7 @@ def main(config_path):
     '''
 
     # criterion
-    criterion = nn.L1Loss()
+    criterion = nn.KLDivLoss()
 
     # optim
     params = [
@@ -111,6 +111,7 @@ def train(package):
             history = history.cuda()
 
             predict = model(holes, pubs, history)
+            predict = torch.log(predict)
             loss_ = criterion(predict, label)
             loss_.backward()
             optimizer.step()

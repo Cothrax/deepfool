@@ -19,7 +19,7 @@ title = "configuration in train mode"
     freeze = false
     load_path = ""
     save_path = "./"
-    save_iter = 200
+    save_iter = 10
 
 [hyperparameters]
     lr = 1e-3
