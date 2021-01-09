@@ -1,6 +1,7 @@
 import math
 import torch
 from torch import nn
+import numpy as np
 
 class CardEmbedding(nn.Module):
     def __init__(self, dim):
@@ -78,7 +79,7 @@ class DF(nn.Module):
     def forward(self, card1, card2, history):# history = [history of action and pot]
         #print(history[:10])
         #input("check")
-        print("history size: {}".format(history.shape))
+        #print("history size: {}".format(history.shape))
 
         # card1 of shape(B, 2)
         # card2 of shape(B, 5)
@@ -94,8 +95,10 @@ class DF(nn.Module):
     def ask(self, sample):
         # sample = [holes, pubs, history]
         holes, pubs, history = sample
-        holes = torch.from_numpy(holes).unsqueeze(dim=0)
-        pubs = torch.from_numpy(pubs).unsqueeze(dim=0)
-        history = torch.from_numpy(history).unsqueeze(dim=0)
+        holes = torch.from_numpy(holes.astype(np.int64)).unsqueeze(dim=0)
+        pubs = torch.from_numpy(pubs.astype(np.int64)).unsqueeze(dim=0)
+        history = torch.from_numpy(history.astype(np.float32)).unsqueeze(dim=0)
 
-        return self.forward(holes, pubs, history)
+        prob = self.forward(holes, pubs, history).squeeze().numpy()
+
+        return prob
