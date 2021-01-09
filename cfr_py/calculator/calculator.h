@@ -38,6 +38,8 @@ private:
     // 你也许需要初始化一些东西？
     void init();
     unordered_map<ull, int> pp_cache;
+    unordered_map<ull, double> pwr_cache;
+    int _power(int * holes, int* pubs);
     // unordered_map<ull, int> opp_cache;
 
 public:
@@ -60,6 +62,10 @@ public:
     // 任一对手的先验期望牌力
     // 阶段 step (game.h)
     // int opp_potential_power(int *holes, int *pubs, int step);
+
+    // 当前step下给定底牌的胜率 = [0,1]（其它玩家底牌未知，不考虑下注动作）
+    // step = {0,1,2,3} 
+    double prior_win_rate(int h0, int h1, int p0, int p1, int p2, int p3, int p4, int step,int MCtimes=10000);
 
 };
 
