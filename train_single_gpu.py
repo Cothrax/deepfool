@@ -24,17 +24,25 @@ def main(config_path):
 
     # model
     model_crt  = DF(18, 6)
+    '''
     model_last = [DF(18, 6)] * config["general"]["num_cfr"]
     for m in model_last:
         for p in m.parameters():
             p.requires_grad = False
+    '''
+    model_last = DF(18, 6)
+    for m in model_last.parameters():
+        m.requires_grad = False
 
     # resume from a checkpoint
     if config["model"]["load"]:
         checkpoint = torch.load(config["model"]["load_path"])
         model_crt.load_state_dict(checkpoint['model'])
+        model_last.load_state_dict(checkpoint['model'])
+        '''
         for m in model_last:
             m.load_state_dict(checkpoint['model'])
+        '''
         print("successfully load model")
 
     model_crt.cuda()
@@ -50,7 +58,7 @@ def main(config_path):
     '''
 
     # criterion
-    criterion = nn.KLDivLoss()
+    criterion = nn.KLDivLoss(reduce="batchmean")
 
     # optim
     params = [
@@ -77,8 +85,12 @@ def main(config_path):
             }, config["model"]["save_path"] + "checkpoint_{}.pt".format(iteration))
             print("save model successfully")
 
+        model_params = model_crt.state_dict()
+        '''
         for m in model_last:
-            m.load_state_dict(model_crt.state_dict())
+            m.load_state_dict(model_params)
+        '''
+        model_last.load_state_dict(model_params)
 
         #lr_scheduler.step(epoch-config["general"]["start_epoch"])
 
@@ -95,8 +107,10 @@ def train(package):
     model.train()
     all_holes, all_pubs, all_history, all_label = dataloader.__getitem__()
     length = all_holes.shape[0]
+    print("sample length {}".format(length))
     st = 0
     loss = 0
+    penalty = 0
     ctr = 0
     while(True):
         if st >= length:
@@ -115,17 +129,21 @@ def train(package):
             history = history.cuda()
 
             predict = model(holes, pubs, history)
+            penalty_ = torch.mean(torch.sum(predict[:,-3:], dim=1), dim=0)
             predict = torch.log(predict)
             loss_ = criterion(predict, label)
-            loss_.backward()
+            loss_sum = loss_ + penalty_ * 0.5
+            loss_sum.backward()
             optimizer.step()
             optimizer.zero_grad()
             st = ed
             loss += loss_.item()
+            penalty += penalty_.item()
             ctr += 1
     loss = loss / ctr
-    print("iteration: {} loss: {:.6f}".format(iteration, loss))
-    writer.add_scalars("train loss", {"sum": loss}, iteration)
+    penalty = penalty / ctr
+    print("iteration: {} loss: {:.6f} penalty: {:.6f}".format(iteration, loss, penalty))
+    writer.add_scalars("train loss", {"loss": loss, "penalty": penalty}, iteration)
     iteration += 1
 
 if __name__ == "__main__":

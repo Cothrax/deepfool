@@ -14,10 +14,10 @@ title = "configuration in train mode"
     max_search_iter = 30
     max_samples = 30000
 
-    num_cfr = 10
+    num_cfr = 1
 
 [model]
-    load = true
+    load = false
     freeze = false
     load_path = "./checkpoint_20.pt"
     save_path = "./"

@@ -80,7 +80,8 @@ class PureCFR(CFR):
             game = Game(start=random.randint(0, NUM_PLAYER - 1))
             self.cnt = 0
             self.cfr(game, player)
-            print(i, '/', max_iter, ': cfr visits', self.cnt)
+            #print(i, '/', max_iter, ': cfr visits', self.cnt)
+        print("finish")
         self.generate_learning_samples()
 
         return self

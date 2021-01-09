@@ -60,7 +60,7 @@ class CFR:
                 regret_plus = np.max(np.vstack([regret, np.zeros(NUM_ACTION)]), axis=0)
                 tot = np.sum(regret_plus)
                 if abs(tot) > 1e-3:
-                    k = self.T // 2
+                    k = self.T // FOLD_NUM
                     new = (regret_plus / tot + old * k) / (k + 1)
                     label = [sample, new]
                     self.labels.append(label)
@@ -70,14 +70,12 @@ class CFR:
                     # self.labels = np.append(self.labels, label, axis=0)
                 mapping[sample_tup] = None
 
-        '''
         print('-------------------- learning samples --------------------')
-        output = random.choices(self.labels, k=5)
+        output = random.choices(self.labels, k=1)
         for e in output:
             print('X:', e[0])
             print('y:', e[1])
         print('-------------------- learning samples --------------------')
-        '''
 
         pass
         self.T += 1
