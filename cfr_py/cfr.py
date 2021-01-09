@@ -1,4 +1,4 @@
-from .game import *
+from game import *
 from copy import deepcopy, copy
 from collections import deque
 import numpy as np
@@ -91,6 +91,22 @@ class CFR:
         self.regrets[node] = regret
 
     def get_sample_action(self, game, sample_prob=init_prob):
+        # win = calculator.prior_win_rate(
+        #     int(game.holes[game.player][0]),
+        #     int(game.holes[game.player][1]),
+        #     int(game.pubs[0]),
+        #     int(game.pubs[1]),
+        #     int(game.pubs[2]),
+        #     int(game.pubs[3]),
+        #     int(game.pubs[4]),
+        #     game.step
+        # )
+
+        if game.is_raise_allowed():
+            return np.searchsorted(equity_prob, game.win[game.step][game.player])
+        else:
+            return CHECK if game.win[game.step][game.player] > equity_prob[0] else FOLD
+
         # i = game.player
         # p = calculator.potential_power(
         #     int(game.holes[i][0]), int(game.holes[i][1]),
@@ -103,7 +119,6 @@ class CFR:
         # else:
         #     prob = sample_prob[:NUM_NOT_RAISE]/np.sum(sample_prob[:NUM_NOT_RAISE])
         #     a = np.random.choice(range(NUM_NOT_RAISE), 1, p=prob)
-        return 1
 
     def dfs(self, game: Game, player, dep):
         self.cnt += 1
@@ -184,7 +199,7 @@ class CFR:
             self.max_dep = 0
             self.cnt = 0
             self.dfs(game, player, 0)
-            #print(i, '/', max_iter, ': visited', self.cnt, ' max_depth', self.max_dep)
+            print(i, '/', max_iter, ': visited', self.cnt, ' max_depth', self.max_dep)
 
         print('COST %s sec' % (time() - begin))
         return self
@@ -197,7 +212,7 @@ class CFR:
             player, game = self.games.popleft()
             self.cnt = 0
             self.cfr(game, player)
-            #print(i, '/', max_iter, ': cfr visits', self.cnt)
+            print(i, '/', max_iter, ': cfr visits', self.cnt)
 
         self.generate_learning_samples()
         return self

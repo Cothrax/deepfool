@@ -35,6 +35,7 @@ RIVER = 3
 GAME_OVER = 4
 NUM_STATE = 5
 
+equity_prob = np.array([0.1, 0.4, 0.7, 0.9, 1])
 
 def card2str(x):
     return '<%s:%s>' % (chr(x//13+ord('a')), x % 13)
