@@ -1,6 +1,8 @@
 from game import *
 from cfr import CFR
+from pure_cfr import PureCFR
 import random
+from time import time
 
 
 def test_games():
@@ -19,15 +21,17 @@ def test_games():
 
 def test_dfs():
     cfr = CFR()
-    cfr.search(30)
 
+    cfr.search(N_CPU * 50)
     sample_size = len(cfr.samples)
-    cfr.strategies = np.random.random(size=(sample_size, NUM_ACTION))
+    strategies = np.random.random(size=(sample_size, NUM_ACTION))
+    strategies /= np.repeat(np.sum(strategies, axis=1).reshape(-1, 1), NUM_ACTION, axis=1)
 
-    cfr.strategies /= np.repeat(np.sum(cfr.strategies, axis=1).reshape(-1, 1), NUM_ACTION, axis=1)
-
-    cfr.run(30)
+    cfr.strategies = strategies
+    cfr.run(N_CPU * 50)
 
 
 if __name__ == '__main__':
+    start = time()
     test_dfs()
+    print(time() - start)

@@ -1,41 +1,8 @@
-
+from params import *
 import numpy as np
 import random
-from .calculator import MYCFR
+from calculator import MYCFR
 
-SHOW = False
-
-
-def card2str(x):
-    return '<%s:%s>' % (chr(x//13+ord('a')), x%13)
-
-
-NUM_PLAYER = 6
-INIT_CHIPS = 500
-SMALL_BLIND = 1
-BIG_BLIND = 2
-
-FOLD = 0
-CHECK = 1
-RAISE_3BB = 2
-# RAISE_HALF_POT = 3
-RAISE_POT = 3
-RAISE_2POT = 4
-ALL_IN = 5
-NUM_ACTION = 6
-
-# cum_prob = np.array([0.1, 0.6, 0.65, 0.8, 0.9, 0.99])
-init_prob = np.array([0.1, 0.3, 0.3, 0.15, 0.10, 0.05])
-#init_prob = np.ones(NUM_ACTION) / NUM_ACTION
-#init_prob = np.array([0.1, 0.5, 0.05, 0.2, 0.1, 0.04, 0.01])
-
-NO_CHANGE = 0
-PRE_FLOP = 0
-FLOP = 1
-TURN = 2
-RIVER = 3
-GAME_OVER = 4
-NUM_STATE = 5
 
 calculator = MYCFR.Calculator()
 
@@ -157,6 +124,9 @@ class Game:
 
     def is_raise_allowed(self):
         return self.step_counter < 6
+
+    def get_legal_action(self):
+        return range(NUM_ACTION) if self.is_raise_allowed() else range(NUM_NOT_RAISE)
 
     def _change_state(self):
         if SHOW:
