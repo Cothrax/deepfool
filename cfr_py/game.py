@@ -18,11 +18,12 @@ class Game:
         self.pubs = -np.ones(shape=5, dtype=np.int)
         self.start = start
         self.big_blind = (start + 1) % NUM_PLAYER
+        self.power = np.zeros(shape=NUM_PLAYER, dtype=np.int)
 
         self.bets = np.zeros(shape=(4, NUM_PLAYER), dtype=np.int)
         self.chips = np.ones(shape=NUM_PLAYER, dtype=np.int) * INIT_CHIPS
         self.folds = np.zeros(shape=NUM_PLAYER, dtype=np.bool)
-        self.power = np.zeros(shape=NUM_PLAYER, dtype=np.int)
+
 
         self.step = 0
         self.num = 6

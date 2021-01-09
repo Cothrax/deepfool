@@ -60,7 +60,7 @@ class CFR:
                 regret_plus = np.max(np.vstack([regret, np.zeros(NUM_ACTION)]), axis=0)
                 tot = np.sum(regret_plus)
                 if abs(tot) > 1e-3:
-                    k = self.T // 2
+                    k = self.T // FOLD_NUM
                     new = (regret_plus / tot + old * k) / (k + 1)
                     label = [sample, new]
                     self.labels.append(label)
@@ -96,13 +96,12 @@ class CFR:
         #     int(game.pubs[2]), int(game.pubs[3]), int(game.pubs[4]),
         #     game.step
         # )
-        if game.is_raise_allowed():
-            a = np.random.choice(range(NUM_ACTION), 1, p=sample_prob)
-        else:
-            prob = sample_prob[:NUM_NOT_RAISE]/np.sum(sample_prob[:NUM_NOT_RAISE])
-            a = np.random.choice(range(NUM_NOT_RAISE), 1, p=prob)
-
-        return a
+        # if game.is_raise_allowed():
+        #     a = np.random.choice(range(NUM_ACTION), 1, p=sample_prob)
+        # else:
+        #     prob = sample_prob[:NUM_NOT_RAISE]/np.sum(sample_prob[:NUM_NOT_RAISE])
+        #     a = np.random.choice(range(NUM_NOT_RAISE), 1, p=prob)
+        return 1
 
     def dfs(self, game: Game, player, dep):
         self.cnt += 1
