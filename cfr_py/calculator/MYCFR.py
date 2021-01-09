@@ -165,6 +165,9 @@ class Calculator(_object):
 
     def potential_power(self, h0, h1, p0, p1, p2, p3, p4, step):
         return _MYCFR.Calculator_potential_power(self, h0, h1, p0, p1, p2, p3, p4, step)
+
+    def prior_win_rate(self, h0, h1, p0, p1, p2, p3, p4, step, MCtimes=10000):
+        return _MYCFR.Calculator_prior_win_rate(self, h0, h1, p0, p1, p2, p3, p4, step, MCtimes)
     __swig_destroy__ = _MYCFR.delete_Calculator
     __del__ = lambda self: None
 Calculator_swigregister = _MYCFR.Calculator_swigregister
