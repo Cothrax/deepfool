@@ -27,7 +27,7 @@ class ParallelCFR:
 
 
 def test_parallel():
-    para_cfr = ParallelCFR(8, 50)
+    para_cfr = ParallelCFR(8, 10)
     para_cfr.parallel_search()
     for cfr in para_cfr.cfr_list:
         sample_size = len(cfr.samples)
