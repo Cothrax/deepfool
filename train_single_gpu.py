@@ -24,25 +24,25 @@ def main(config_path):
 
     # model
     model_crt  = DF(18, 6)
-    '''
-    model_last = [DF(18, 6)] * config["general"]["num_cfr"]
-    for m in model_last:
-        for p in m.parameters():
-            p.requires_grad = False
-    '''
-    model_last = DF(18, 6)
-    for m in model_last.parameters():
-        m.requires_grad = False
+    if config["general"]["straight_sampling"]:
+        model_last = DF(18, 6)
+        for m in model_last.parameters():
+            m.requires_grad = False
+    else:
+        model_last = [DF(18, 6)] * config["general"]["num_cfr"]
+        for m in model_last:
+            for p in m.parameters():
+                p.requires_grad = False
 
     # resume from a checkpoint
     if config["model"]["load"]:
         checkpoint = torch.load(config["model"]["load_path"])
         model_crt.load_state_dict(checkpoint['model'])
-        model_last.load_state_dict(checkpoint['model'])
-        '''
-        for m in model_last:
-            m.load_state_dict(checkpoint['model'])
-        '''
+        if config["general"]["straight_sampling"]:
+            model_last.load_state_dict(checkpoint['model'])
+        else:
+            for m in model_last:
+                m.load_state_dict(checkpoint['model'])
         print("successfully load model")
 
     model_crt.cuda()
@@ -50,7 +50,7 @@ def main(config_path):
 
 
     # data
-    dataset_train = data.POKER_DATASET(model_last, config["general"]["max_search_iter"])
+    dataset_train = data.POKER_DATASET(model_last, config["general"]["max_search_iter"], config["general"]["straight_sampling"])
     dataloader_train = dataset_train
     '''
     dataloader_train = Data.DataLoader(dataset_train, batch_size=1, shuffle=False, pin_memory=True,
@@ -86,11 +86,11 @@ def main(config_path):
             print("save model successfully")
 
         model_params = model_crt.state_dict()
-        '''
-        for m in model_last:
-            m.load_state_dict(model_params)
-        '''
-        model_last.load_state_dict(model_params)
+        if config["general"]["straight_sampling"]:
+            model_last.load_state_dict(model_params)
+        else:
+            for m in model_last:
+                m.load_state_dict(model_params)
 
         #lr_scheduler.step(epoch-config["general"]["start_epoch"])
 

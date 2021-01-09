@@ -16,6 +16,8 @@ title = "configuration in train mode"
 
     num_cfr = 1
 
+    straight_sampling = true
+
 [model]
     load = false
     freeze = false
