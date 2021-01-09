@@ -22,13 +22,13 @@ def test_games():
 def test_dfs():
     cfr = CFR()
 
-    cfr.search(N_CPU * 50)
+    cfr.search(5)
     sample_size = len(cfr.samples)
     strategies = np.random.random(size=(sample_size, NUM_ACTION))
     strategies /= np.repeat(np.sum(strategies, axis=1).reshape(-1, 1), NUM_ACTION, axis=1)
 
     cfr.strategies = strategies
-    cfr.run(N_CPU * 50)
+    cfr.run(5)
 
 
 if __name__ == '__main__':

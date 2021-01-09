@@ -145,7 +145,7 @@ def test_pure_cfr():
     start = time()
     advisor = RandomAdvisor()
     cfr = PureCFR(advisor)
-    cfr.run(20)
+    cfr.run(5)
     print(time() - start)
     pass
 
@@ -153,10 +153,11 @@ def test_pure_cfr():
 def test_parallel_pure_cfr():
     start = time()
     adv_list = [RandomAdvisor() for i in range(8)]
-    cfr = ParallelPureCFR(8, 2, adv_list)
-    cfr.parallel_run()
+    cfr = ParallelPureCFR(1, 10, adv_list)
+    for i in range(3):
+        cfr.parallel_run()
     print(time() - start)
 
 
 if __name__ == '__main__':
-    test_parallel_pure_cfr()
+    test_pure_cfr()

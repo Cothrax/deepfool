@@ -89,6 +89,15 @@ class CFR:
         self.regrets[node] = regret
 
     def get_sample_action(self, game, sample_prob=init_prob):
+        if game.is_raise_allowed():
+            a = np.random.choice(range(NUM_ACTION), 1, p=sample_prob)
+        else:
+            prob = sample_prob[:NUM_NOT_RAISE] / np.sum(sample_prob[:NUM_NOT_RAISE])
+            a = np.random.choice(range(NUM_NOT_RAISE), 1, p=prob)
+
+        return a
+
+
         # win = calculator.prior_win_rate(
         #     int(game.holes[game.player][0]),
         #     int(game.holes[game.player][1]),
@@ -100,10 +109,10 @@ class CFR:
         #     game.step
         # )
 
-        if game.is_raise_allowed():
-            return np.searchsorted(equity_prob, game.win[game.step][game.player])
-        else:
-            return CHECK if game.win[game.step][game.player] > equity_prob[0] else FOLD
+        # if game.is_raise_allowed():
+        #     return np.searchsorted(equity_prob, game.win[game.step][game.player])
+        # else:
+        #     return CHECK if game.win[game.step][game.player] > equity_prob[0] else FOLD
 
         # i = game.player
         # p = calculator.potential_power(
