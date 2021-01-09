@@ -1,4 +1,4 @@
-from game import *
+from .game import *
 from copy import deepcopy, copy
 from collections import deque
 import numpy as np
@@ -70,12 +70,14 @@ class CFR:
                     # self.labels = np.append(self.labels, label, axis=0)
                 mapping[sample_tup] = None
 
+        '''
         print('-------------------- learning samples --------------------')
         output = random.choices(self.labels, k=5)
         for e in output:
             print('X:', e[0])
             print('y:', e[1])
         print('-------------------- learning samples --------------------')
+        '''
 
         pass
         self.T += 1
@@ -183,7 +185,7 @@ class CFR:
             self.max_dep = 0
             self.cnt = 0
             self.dfs(game, player, 0)
-            print(i, '/', max_iter, ': visited', self.cnt, ' max_depth', self.max_dep)
+            #print(i, '/', max_iter, ': visited', self.cnt, ' max_depth', self.max_dep)
 
         print('COST %s sec' % (time() - begin))
         return self
@@ -196,7 +198,7 @@ class CFR:
             player, game = self.games.popleft()
             self.cnt = 0
             self.cfr(game, player)
-            print(i, '/', max_iter, ': cfr visits', self.cnt)
+            #print(i, '/', max_iter, ': cfr visits', self.cnt)
 
         self.generate_learning_samples()
         return self

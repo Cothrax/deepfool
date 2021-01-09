@@ -11,7 +11,7 @@ title = "configuration in train mode"
     test_times = 1
     max_iter = 10000
 
-    max_search_iter = 100
+    max_search_iter = 20
     max_samples = 100000
 
 [model]
