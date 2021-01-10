@@ -12,6 +12,8 @@
 
 `cfr_py/`为MCCFR的实现代码
 
+`cfr_py/calculator` C++写的牌力计算器，由Swig包装，在linux可以使用，无需单独编译
+
 `agents/`为可在`neuron_poker`环境中运行的Agent
 
 ### 预训练样本生成
@@ -53,6 +55,8 @@ scipy
 tensorboard
 tensorboardX
 ```
+
+建议在linux下运行，其他系统没有测试。
 
 ### 联系
 如果在运行时出现任何问题，欢迎联系：`{liangsusan18, lilongcheng18, chenyanfan18}@mails.ucas.ac.cn`。
