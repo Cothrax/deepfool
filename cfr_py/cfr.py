@@ -1,4 +1,4 @@
-from game import *
+from .game import *
 from copy import deepcopy, copy
 from collections import deque
 import numpy as np

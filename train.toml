@@ -1,7 +1,7 @@
 title = "configuration in train mode"
 
 [general]
-    data_path = ""
+    data_path = "./data"
     H = 128
     batch_size = 60
     num_workers = 4
@@ -11,21 +11,21 @@ title = "configuration in train mode"
     test_times = 1
     max_iter = 10000
 
-    max_search_iter = 30
+    max_search_iter = 100
     max_samples = 30000
 
-    num_cfr = 1
+    num_cfr = 8
 
-    straight_sampling = true
+    straight_sampling = false
 
 [model]
-    load = false
-    freeze = false
-    load_path = "./checkpoint_20.pt"
+    load = true
+    freeze = true
+    load_path = "./pretrain.pt"
     save_path = "./"
     save_iter = 10
 
 [hyperparameters]
-    lr = 1e-3
+    lr = 1e-2
     betas = 0.9
     decay = 1e-4

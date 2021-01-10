@@ -1,7 +1,7 @@
 import numpy as np
 # for CFR
 FOLD_NUM = 100
-N_CPU = 6
+N_CPU = 8
 
 # for DBEUG
 SHOW = False

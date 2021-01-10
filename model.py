@@ -82,6 +82,8 @@ class DF(nn.Module):
             nn.Softmax(dim=1)
         )
 
+        self.dropout = nn.Dropout(p=0.2)
+
     def forward(self, card1, card2, history):# history = [history of action and pot]
         #print(history[:10])
         #input("check")
@@ -95,7 +97,7 @@ class DF(nn.Module):
         #f2 = self.hist_rnn(history)
         f2 = self.hist_fc(history.view(card1.shape[0], -1))
         f3 = torch.cat([f1, f2], dim=1)
-        f4 = self.post_process(f3)
+        f4 = self.post_process(self.dropout(f3))
 
         return f4
     
@@ -109,3 +111,28 @@ class DF(nn.Module):
         prob = self.forward(holes, pubs, history).squeeze().numpy()
 
         return prob
+
+class PreTrain(nn.Module):
+    def __init__(self, num_action, dim=64):
+        super().__init__()
+        self.card = Card(dim)
+
+        self.post_process = nn.Sequential(
+            nn.Linear(dim, dim),
+            nn.ReLU(True),
+            nn.Linear(dim, dim),
+            nn.ReLU(True),
+            nn.Linear(dim, num_action),
+            nn.Softmax(dim=1)
+        )
+
+        self.dropout = nn.Dropout(p=0.2)
+
+    def forward(self, card1, card2):
+        # card1 of shape(B, 2)
+        # card2 of shape(B, 5)
+
+        f1 = self.card(card1, card2)
+        f4 = self.post_process(self.dropout(f1))
+
+        return f4

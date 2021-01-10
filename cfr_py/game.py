@@ -1,7 +1,7 @@
-from params import *
+from .params import *
 import numpy as np
 import random
-from calculator import MYCFR
+from .calculator import MYCFR
 
 
 calculator = MYCFR.Calculator()
