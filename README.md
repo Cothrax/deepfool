@@ -1,11 +1,17 @@
 # 德州扑克AI
 ### 文件说明
 `train_single_gpu.py`为策略网络训练代码
+
 `train_equity.py`为预训练代码
+
 `data.py`为数据处理和加载代码
+
 `data_generator.py`为预训练无history样本生成代码
+
 `train.toml`为训练参数配置文件
+
 `cfr_py/`为MCCFR的实现代码
+
 `agents/`为可在`neuron_poker`环境中运行的Agent
 
 ### 预训练样本生成
@@ -39,9 +45,10 @@ self.env.add_player(CFRPlayer(self.env))
 
 ### 库函数依赖
 本仓库运行在如下环境中：
-> python==3.7
-  pytorch==1.6.0
-  numpy
-  scipy
-  tensorboard
-  tensorboardX
+```
+python==3.7
+pytorch==1.6.0
+numpy
+scipy
+tensorboard
+tensorboardX
