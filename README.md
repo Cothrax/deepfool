@@ -48,10 +48,11 @@ self.env.add_player(CFRPlayer(self.env))
 ```
 python==3.7
 pytorch==1.6.0
-numpy
+numpy==1.18.1
 scipy
 tensorboard
 tensorboardX
+```
 
 ### 联系
-如果在运行时出现任何问题，欢迎联系：`{liangsusan18, lilongcheng18, chenyanfan18}@mails.ucas.ac.cn`
+如果在运行时出现任何问题，欢迎联系：`{liangsusan18, lilongcheng18, chenyanfan18}@mails.ucas.ac.cn`。
