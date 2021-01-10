@@ -1,3 +1,7 @@
-./runs/*
-./__pycache__/*
+runs/*
+__pycache__/*
 ./checkpoint_*.pt
+*.pkl
+*.pt
+cfr-py/*
+cfr_py/__pycache__/

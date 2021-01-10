@@ -20,7 +20,11 @@ class POKER_DATASET(object):
         else:
             self.model_list = model
             self.cfr = ParallelPureCFR(len(self.model_list), max_iter, self.model_list)
-            torch.set_num_threads(1)
+            self.ctr = 0
+            self.holes = None
+            self.pubs = None
+            self.history = None
+            self.new = None
             print("using pure cfr sampling")
     
     def __getitem__(self):
@@ -54,16 +58,32 @@ class POKER_DATASET(object):
             history = torch.cat(all_history, dim=0)
             new = torch.cat(all_new, dim=0)
         else:
-            self.cfr.parallel_run()
+            if self.ctr == 0:
+                torch.set_num_threads(1)
+                self.cfr.parallel_run()
+                torch.set_num_threads(6)
 
-            samples, new = zip(*self.cfr.labels)
-            holes, pubs, history_ = zip(*samples)
-            holes = torch.from_numpy(np.array(holes).astype(np.int64))
-            pubs = torch.from_numpy(np.array(pubs).astype(np.int64))
-            history = torch.from_numpy(np.array(history_).astype(np.float32))
-            new = torch.from_numpy(np.array(new).astype(np.float32))
+                samples, new = zip(*self.cfr.labels)
+                holes, pubs, history_ = zip(*samples)
+                holes = torch.from_numpy(np.array(holes).astype(np.int64))
+                pubs = torch.from_numpy(np.array(pubs).astype(np.int64))
+                history = torch.from_numpy(np.array(history_).astype(np.float32))
+                new = torch.from_numpy(np.array(new).astype(np.float32))
+                self.holes = holes
+                self.pubs = pubs
+                self.history = history
+                self.new = new
+                self.ctr += 1
+            elif self.ctr <= 5:
+                idx = torch.randperm(len(self.holes))
+                self.holes = self.holes[idx]
+                self.pubs = self.pubs[idx]
+                self.history = self.history[idx]
+                self.new = self.new[idx]
+                self.ctr += 1
+                if self.ctr == 6: self.ctr = 0
 
-        return holes, pubs, history, new
+        return self.holes, self.pubs, self.history, self.new
     
     def __len__(self):
         return 10

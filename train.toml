@@ -11,10 +11,10 @@ title = "configuration in train mode"
     test_times = 1
     max_iter = 10000
 
-    max_search_iter = 100
+    max_search_iter = 200
     max_samples = 30000
 
-    num_cfr = 8
+    num_cfr = 6
 
     straight_sampling = false
 

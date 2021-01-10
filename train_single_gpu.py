@@ -27,11 +27,13 @@ def main(config_path):
     model_crt = DF(18, 6)
     if config["general"]["straight_sampling"]:
         model_last = DF(18, 6)
+        model_last.eval()
         for m in model_last.parameters():
             m.requires_grad = False
     else:
         model_last = [DF(18, 6)] * config["general"]["num_cfr"]
         for m in model_last:
+            m.eval()
             for p in m.parameters():
                 p.requires_grad = False
 
@@ -53,7 +55,7 @@ def main(config_path):
         else:
             param.requires_grad = False
 
-    model_crt.cuda()
+    #model_crt.cuda()
     #model = nn.DataParallel(model)
 
 
@@ -130,10 +132,10 @@ def train(package):
             pubs = all_pubs[st:ed]
             history = all_history[st:ed]
 
-            label = label.cuda()
-            holes = holes.cuda()
-            pubs = pubs.cuda()
-            history = history.cuda()
+            #label = label.cuda()
+            #holes = holes.cuda()
+            #pubs = pubs.cuda()
+            #history = history.cuda()
 
             predict = model(holes, pubs, history)
             #penalty_ = torch.mean(torch.sum(predict[:,-3:], dim=1), dim=0)
