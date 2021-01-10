@@ -2,12 +2,10 @@
 FLAGS = -fPIC
 
 # the python interface through swig
-PYTHONI = -I/usr/include/python3.6m/
+PYTHONI = -I/usr/include/python3.7/
 PYTHONL = -Xlinker -export-dynamic
 
 # cpp file
-# FILE = ./cfr.cpp ./game.cpp ./oracle.cpp ./calculator.cpp
-# FILE_O = ./cfr.o ./game.o ./oracle.o ./calculator.o
 FILE = ./calculator.cpp
 FILE_O = ./calculator.o
 # default super-target
