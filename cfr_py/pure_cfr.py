@@ -89,14 +89,14 @@ class PureCFR(CFR):
         if if_generate:
             self.generate_learning_samples()
             #print(i, '/', max_iter, ': cfr visits', self.cnt)
-        self.generate_learning_samples()
+        #self.generate_learning_samples()
 
         return self
 
 
 class ParallelPureCFR:
     def __init__(self, num_cfr, max_iter, adv_list):
-        self.T = 0
+        self.T = FOLD_NUM
         self.num_cfr = num_cfr
         self.max_iter = max_iter
         self.cfr_list = [PureCFR(adv_list[i]) for i in range(num_cfr)]
@@ -117,15 +117,18 @@ class ParallelPureCFR:
             self.mapping[sample_tup][0] += regret
 
     def generate_learning_samples(self):
+        k = self.T // FOLD_NUM
+        print("k: {}".format(k))
+        input("check k")
         for _, v in self.mapping.items():
             regret, sample, old = v
             regret_plus = np.max(np.vstack([regret, np.zeros(NUM_ACTION)]), axis=0)
             tot = np.sum(regret_plus)
             if abs(tot) > 1e-3:
-                k = self.T // FOLD_NUM
                 new = (regret_plus / tot + old * k) / (k + 1)
                 label = [sample, new]
                 self.labels.append(label)
+        self.T += 1
 
     def parallel_run(self):
         with Pool(N_CPU) as p:
