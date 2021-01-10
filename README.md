@@ -52,3 +52,6 @@ numpy
 scipy
 tensorboard
 tensorboardX
+
+### 联系
+如果在运行时出现任何问题，欢迎联系：`{liangsusan18, lilongcheng18, chenyanfan18}@mails.ucas.ac.cn`
