@@ -20,7 +20,6 @@ def main(config_path):
     torch.set_num_threads(1)
 
     config = toml.load(config_path)
-    #writer = SummaryWriter("runs/poker")
     writer = SummaryWriter()
 
     # model
@@ -55,17 +54,9 @@ def main(config_path):
         else:
             param.requires_grad = False
 
-    #model_crt.cuda()
-    #model = nn.DataParallel(model)
-
-
     # data
     dataset_train = data.POKER_DATASET(model_last, config["general"]["max_search_iter"], config["general"]["straight_sampling"])
     dataloader_train = dataset_train
-    '''
-    dataloader_train = Data.DataLoader(dataset_train, batch_size=1, shuffle=False, pin_memory=True,
-                        num_workers=config["general"]["num_workers"] , drop_last=False) 
-    '''
 
     # criterion
     criterion = nn.KLDivLoss(reduction="batchmean")
@@ -101,8 +92,6 @@ def main(config_path):
             for m in model_last:
                 m.load_state_dict(model_params)
 
-        #lr_scheduler.step(epoch-config["general"]["start_epoch"])
-
 def train(package):
     global iteration
     [dataloader, 
@@ -132,16 +121,9 @@ def train(package):
             pubs = all_pubs[st:ed]
             history = all_history[st:ed]
 
-            #label = label.cuda()
-            #holes = holes.cuda()
-            #pubs = pubs.cuda()
-            #history = history.cuda()
-
             predict = model(holes, pubs, history)
-            #penalty_ = torch.mean(torch.sum(predict[:,-3:], dim=1), dim=0)
             predict = torch.log(predict)
             loss_ = criterion(predict, label)
-            #loss_sum = loss_ + penalty_ * 0.5
             loss_sum = loss_
             loss_sum.backward()
             nn.utils.clip_grad_norm_(model.parameters(), 1.)
@@ -149,10 +131,8 @@ def train(package):
             optimizer.zero_grad()
             st = ed
             loss += loss_.item()
-            #penalty += penalty_.item()
             ctr += 1
     loss = loss / ctr
-    #penalty = penalty / ctr
     print("iteration: {} loss: {:.6f} penalty: {:.6f}".format(iteration, loss, penalty))
     writer.add_scalars("train loss", {"loss": loss, "penalty": penalty}, iteration)
     iteration += 1

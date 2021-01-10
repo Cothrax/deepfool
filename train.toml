@@ -19,7 +19,7 @@ title = "configuration in train mode"
     straight_sampling = false
 
 [model]
-    load = true
+    load = false
     freeze = true
     load_path = "./checkpoint_70.pt"
     save_path = "./"

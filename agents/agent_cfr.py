@@ -21,9 +21,8 @@ class Player:
         self.name = name
         self.autoplay = True
         self.env = env
-        #self.model = DF(18, 6).cpu()
-        self.model = PreTrain(6)
-        self.model.load_state_dict(torch.load("../deepfool/checkpoint_40.pt", map_location=torch.device('cpu'))['model'])
+        self.model = DF(18, 6).cpu()
+        self.model.load_state_dict(torch.load("./agents/checkpoint.pt", map_location=torch.device('cpu')))
         for p in self.model.parameters():
             p.requires_grad = False
         self.model.eval()
@@ -41,25 +40,20 @@ class Player:
             table_cards = self.env.table_cards[:length]
             table_cards = [self.rank[x[0]] + 13 * self.suit[x[1]] for x in table_cards]
             card2[:length] = table_cards
-        
         card1 = np.array(card1)
         card2 = np.array(card2)
-        '''
+
         order = (np.arange(6) - 5 + info["player_data"]["position"]) % 6
         if_call = np.array([info["stage_data"][i]["calls"] for i in range(4)]).astype(np.float32)
         if_raise = np.array([info["stage_data"][i]["raises"] for i in range(4)]).astype(np.float32)
         bets = np.array([info["stage_data"][i]["contribution"] for i in range(4)]).astype(np.float32)
         history = np.concatenate([if_call[:,order], if_raise[:, order], bets[:, order]], axis=1)
-        '''
 
         card1 = torch.from_numpy(card1).unsqueeze(0)
         card2 = torch.from_numpy(card2).unsqueeze(0)
-        #history = torch.from_numpy(history).unsqueeze(0)
+        history = torch.from_numpy(history).unsqueeze(0)
 
-        #predict = self.model(card1, card2, history).squeeze()
-        predict = self.model(card1, card2).squeeze().numpy()
-        print("-------------- predict ----------------------\n", predict)
-
+        predict = self.model(card1, card2, history).squeeze().numpy()
 
         if len(set(action_space)) == 1:
             return action_space[0]
@@ -71,36 +65,8 @@ class Player:
             prob = predict[[0,1,1,2,3,4,5]]
             prob = prob * mask
             action = np.argmax(prob)
-        '''
-        if len(set(action_space)) == 1:
-            return action_space[0]
-        elif(len(set(action_space))) > 2:
-            predict = predict.numpy()
-            #action = np.random.choice(len(predict), 1, p=predict)[0]
-            action = np.argmax(predict)
-        else:
-            action = 0 if predict[0] > predict[1] else 1
-        if action >= 2:
-            action += 1
-        elif action == 1:
-            if Action.CHECK not in set(action_space):
-                action = 2
-        elif action == 0 and Action.FOLD not in set(action_space):
-            action = 1
-        '''
-
-        '''
-        if len(set(action_space)) == 1:
-            return action_space[0]
-        elif(len(set(action_space))) > 2:
-            action = torch.argmax(predict).item()
-        else:
-            action = 0 if predict[0] > predict[1] else 1
-        if action == 2:
-            action += 1
-        elif action == 1:
-            if Action.CHECK not in set(action_space):
-                action = 2
-        '''
+            if action == 6:
+                prob = prob / prob.sum()
+                action = np.random.choice(7, 1, p=prob)
 
         return action

@@ -17,7 +17,6 @@ class CardEmbedding(nn.Module):
         valid = Y > 0
         Y = Y.clamp(min=0)
         embs = self.card(Y) + self.rank(Y // 4) + self.suit(Y % 4)
-        #print(embs.shape)
         valid = valid.view(-1, 1)
         embs = embs * valid
 
@@ -65,7 +64,6 @@ class DF(nn.Module):
         super().__init__()
         self.card = Card(dim)
 
-        #self.hist_rnn = History_Act(history_size, dim, dim)
         self.hist_fc = nn.Sequential(
             nn.Linear(4*18, dim),
             nn.ReLU(True),
@@ -85,17 +83,12 @@ class DF(nn.Module):
         self.dropout = nn.Dropout(p=0.2)
 
     def forward(self, card1, card2, history):# history = [history of action and pot]
-        #print(history[:10])
-        #input("check")
-        #print("history size: {}".format(history.shape))
-
         # card1 of shape(B, 2)
         # card2 of shape(B, 5)
         # history of shape (B, 4, 18)
 
         f1 = self.card(card1, card2)
-        #f2 = self.hist_rnn(history)
-        f2 = self.hist_fc(history.view(card1.shape[0], -1))
+        f2 = self.hist_fc(history.reshape(card1.shape[0], -1))
         f3 = torch.cat([f1, f2], dim=1)
         f4 = self.post_process(self.dropout(f3))
 

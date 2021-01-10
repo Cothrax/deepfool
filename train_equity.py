@@ -29,8 +29,6 @@ def main(config_path):
         print("successfully load model")
 
     model_crt.cuda()
-    #model = nn.DataParallel(model)
-
 
     # data
     dataset_train = data.Equity_DATASET(config["general"]["data_path"])
