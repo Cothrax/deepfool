@@ -96,8 +96,8 @@ class DF(nn.Module):
         f1 = self.card(card1, card2)
         #f2 = self.hist_rnn(history)
         f2 = self.hist_fc(history.view(card1.shape[0], -1))
-        f3 = torch.cat([f1, f2], dim=1)
-        f4 = self.post_process(self.dropout(f3))
+        f3 = torch.cat([f1, self.dropout(f2)], dim=1)
+        f4 = self.post_process(f3)
 
         return f4
     
