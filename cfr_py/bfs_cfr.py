@@ -1,10 +1,10 @@
-from params import *
-from game import *
+from .params import *
+from .game import *
 from copy import deepcopy, copy
 from collections import deque
 from time import time
 import numpy as np
-from pure_cfr import PureCFR, RandomAdvisor
+from .pure_cfr import PureCFR, RandomAdvisor
 from multiprocessing import Pool, Process
 
 
