@@ -50,9 +50,9 @@ class TabularAdvisor:
     def __init__(self):
         self.node_map = {}
 
-    def ask(self, sample):
+    def ask(self, sample, training=True):
         if sample not in self.node_map:
-            return np.ones(NUM_ACTION) / NUM_ACTION
+            return np.ones(NUM_ACTION) / NUM_ACTION if training else None
         return self.node_map[sample].get_strategy()
 
     def answer(self, sample, regret):
@@ -140,6 +140,117 @@ class NaiveCFR(PureCFR):
         pickle.dump(self.advisor, open('pncfr.dat', 'wb'))
 
 
+class RandomizedNaiveCFR(NaiveCFR):
+    def __init__(self, given_prob):
+        super(RandomizedNaiveCFR, self).__init__()
+        self.given_prob = given_prob
+
+    def cfr(self, game: Game, player):
+        self.cnt += 1
+        if game.change_state() == GAME_OVER:
+            return game.payoff()
+
+        sample, strategy = self.get_strategy(game)
+        if game.player != player:
+            a = self.get_sample_action(game, sample_prob=self.given_prob)
+            next_game = deepcopy(game)
+            next_game.act(a)
+            util = self.cfr(next_game, player)
+            return util
+        else:
+            legal_action = range(NUM_ACTION)
+            if not game.is_raise_allowed():
+                strategy[NUM_NOT_RAISE:] = 0
+                tot = np.sum(strategy)
+                if tot:
+                    strategy /= tot
+                else:
+                    strategy[:NUM_NOT_RAISE] = 1 / NUM_NOT_RAISE
+                legal_action = range(NUM_NOT_RAISE)
+
+            util = np.zeros(NUM_PLAYER)
+            cv_util = np.zeros(NUM_ACTION)
+            for a in legal_action:
+                next_game = deepcopy(game)
+                next_game.act(a)
+                next_util = self.cfr(next_game, player)
+                cv_util[a] = next_util[player]
+                util += strategy[a] * next_util
+
+            regret = cv_util - util[player]
+
+            if not game.is_raise_allowed():
+                regret[NUM_NOT_RAISE:] = 0
+
+            self.update_strategy(sample, regret, strategy)
+            # self.strategies.append(strategy)
+            return util
+
+
+class SampleGenerator:
+    """
+    use NaiveCFR to generate learning samples
+    """
+    def __init__(self, advisor):
+        self.advisor = advisor
+        self.naive_cfr = NaiveCFR()
+        self.pure_cfr = PureCFR(None)
+
+    def play(self, max_iter, given_prob=None):
+        labels = []
+        cnt = 0
+        none_cnt = 0
+        for t in range(max_iter):
+            game = Game(start=random.randint(0, NUM_PLAYER-1))
+            while game.change_state() != GAME_OVER:
+                cnt += 1
+                node = self.naive_cfr.convert_sample(game)
+                strategy = self.advisor.ask(node, training=False)
+                if strategy is None:
+                    none_cnt += 1
+                    if game.is_raise_allowed():
+                        a = np.random.choice(range(NUM_ACTION), 1)[0]
+                    else:
+                        a = np.random.choice(range(NUM_NOT_RAISE), 1)[0]
+                else:
+                    sample = self.pure_cfr.convert_sample(game)
+                    labels.append([sample, strategy])
+
+                    if game.is_raise_allowed():
+                        tot = np.sum(strategy[:NUM_NOT_RAISE])
+                        if abs(tot) > 1e-3:
+                            pass
+
+                    prob = strategy if given_prob is None else given_prob
+                    a = self.naive_cfr.get_sample_action(game, sample_prob=prob)
+                game.act(a)
+        print('strategy' if given_prob is None else 'random', ':invalid node:', none_cnt, '/', cnt)
+        return labels
+
+    def worker(self, args):
+        if type(args) == int:
+            return self.play(args)
+        else:
+            max_iter, given_prob = args
+            return self.play(max_iter, given_prob)
+
+    def generate(self, n_play, max_iter):
+        """
+        will generate n_play * max_iter random walk samples and
+        n_play * max_iter strategy walk samples
+        return one flattened list
+        """
+        start = time()
+        with Pool(N_CPU) as p:
+            labels1 = p.map(self.worker, [max_iter] * n_play)
+            labels2 = p.map(self.worker, [(max_iter, init_prob)] * n_play)
+
+            # TODO or you want to save to files?
+            # NOTE that chain gives a generator, you may need list(chain(*labels1, *labels2)) to get a list
+            print('COST', time() - start, 'sec')
+            return chain(*labels1, *labels2)
+
+
 def test_ncfr():
     # advisor = pickle.load(open('3pncfr80.dat', 'rb'))
     cfr = NaiveCFR(advisor=None)
@@ -147,5 +258,11 @@ def test_ncfr():
     pass
 
 
-if __name__ == '__main__':
-    test_ncfr()
+def test_generator(filename):
+    adv = pickle.load(open(filename, 'rb'))
+    gen = SampleGenerator(advisor=adv)
+
+    labels = list(gen.generate(6, 20))
+    print('generated:', len(labels))
+    return labels
+

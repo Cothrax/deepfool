@@ -93,16 +93,13 @@ class CFR:
 
     def get_sample_action(self, game, sample_prob=init_prob):
         if game.is_raise_allowed():
-            a = np.random.choice(range(NUM_ACTION), 1, p=sample_prob)
+            a = np.random.choice(range(NUM_ACTION), 1, p=sample_prob)[0]
         else:
-            prob = sample_prob[:NUM_NOT_RAISE]
-            tot = np.sum(prob)
+            tot = np.sum(sample_prob[:NUM_NOT_RAISE])
             if abs(tot) < 1e-3:
-                prob = np.ones(NUM_NOT_RAISE) / NUM_NOT_RAISE
+                a = np.random.choice(range(NUM_NOT_RAISE), 1)[0]
             else:
-                prob /= tot
-
-            a = np.random.choice(range(NUM_NOT_RAISE), 1, p=prob)
+                a = np.random.choice(range(NUM_NOT_RAISE), 1, p=sample_prob[:NUM_NOT_RAISE] / tot)[0]
 
         return a
 

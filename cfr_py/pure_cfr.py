@@ -28,7 +28,7 @@ class RandomAdvisor:
 class PureCFR(CFR):
     """
     MCCFR (External Sampling) with strategy advisor 
-    (can be tabular or nueron network)
+    (can be tabular or neuron network)
     """
     
     def __init__(self, advisor):
