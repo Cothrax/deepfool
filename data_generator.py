@@ -1,14 +1,10 @@
 import sys
 import time
-import tqdm
 import pickle as pkl
 import numpy as np
 import scipy.stats as st
 from cfr_py.calculator import MYCFR
 from multiprocessing.dummy import Pool
-#from multiprocessing import Pool
-
-#MAX_CTR = 400
 
 def generate_sample(MAX_CTR):
     calculator = MYCFR.Calculator()

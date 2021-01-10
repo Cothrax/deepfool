@@ -1,5 +1,3 @@
-#DATA
-
 import os
 import glob
 import torch
@@ -92,8 +90,9 @@ class Equity_DATASET(Data.Dataset):
     def __init__(self, path):
         self.cards = []
         self.probs = []
-        for i in range(1, 10):
-            samples = pkl.load(open(path + "_{}.pkl".format(i), "rb"))[0]
+	    self.files = glob.glob(path + "_*.pkl")
+        for f in self.files:
+            samples = pkl.load(open(f, "rb"))[0]
             cards, prob = zip(*samples)
             self.cards.append(cards)
             self.probs.append(prob)
@@ -108,4 +107,4 @@ class Equity_DATASET(Data.Dataset):
         return self.cards[st:ed], self.probs[st:ed]
     
     def __len__(self):
-        return 90
+        return len(self.files) * 10

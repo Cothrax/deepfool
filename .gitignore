@@ -5,3 +5,4 @@ __pycache__/*
 *.pt
 cfr-py/*
 cfr_py/__pycache__/
+data/
