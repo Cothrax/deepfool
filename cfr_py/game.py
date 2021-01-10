@@ -1,7 +1,7 @@
-from .params import *
+from cfr_py.params import *
 import numpy as np
 import random
-from .calculator import MYCFR
+from cfr_py.calculator import MYCFR
 
 
 calculator = MYCFR.Calculator()
@@ -11,7 +11,7 @@ class Game:
     __slots__ = ['holes', 'pubs', 'start', 'big_blind', 'bets',
                  'chips', 'folds', 'power', 'step', 'num', 'pot',
                  'cur_bet', 'player', 'history', 'num_act',
-                 'if_call', 'if_raise', 'step_counter']
+                 'if_call', 'if_raise', 'step_counter', 'win']
 
     def __init__(self, start=0):
         self.holes = -np.ones(shape=(NUM_PLAYER, 2), dtype=np.int)
@@ -43,7 +43,7 @@ class Game:
         self.if_raise = np.zeros(shape=(4, NUM_PLAYER), dtype=np.bool)
         self.step_counter = 0
 
-        #self.win = np.zeros(shape=(4, NUM_PLAYER))
+        self.win = np.zeros(shape=(4, NUM_PLAYER))
         self.generate()
 
     def debug_print(self):
@@ -70,7 +70,6 @@ class Game:
                                  int(self.pubs[2]), int(self.pubs[3]), int(self.pubs[4]))
             self.power[i] = v
 
-            '''
             for j in range(4):
                 self.win[j][i] = calculator.prior_win_rate(
                     int(self.holes[i][0]),
@@ -82,7 +81,6 @@ class Game:
                     int(self.pubs[4]),
                     j
                 )
-            '''
 
         if SHOW:
             self.debug_print()

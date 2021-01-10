@@ -1,10 +1,10 @@
-from .params import *
-from .game import *
+from cfr_py.params import *
+from cfr_py.game import *
 from copy import deepcopy, copy
 from queue import Queue
 from time import time
 import numpy as np
-from .cfr import CFR
+from cfr_py.cfr import CFR
 from multiprocessing import Pool, Process
 
 
@@ -33,9 +33,10 @@ class PureCFR(CFR):
         strategy = self.advisor.ask(sample)
         return sample, strategy
 
-    def update_strategy(self, node, regret):
+    def update_strategy(self, node, regret, strategy):
         self.samples.append(node)
         self.regrets.append(regret)
+        self.strategies.append(strategy)
 
     def cfr(self, game: Game, player):
         self.cnt += 1
@@ -53,7 +54,11 @@ class PureCFR(CFR):
             legal_action = range(NUM_ACTION)
             if not game.is_raise_allowed():
                 strategy[NUM_NOT_RAISE:] = 0
-                strategy /= np.sum(strategy)
+                tot = np.sum(strategy)
+                if tot:
+                    strategy /= tot
+                else:
+                    strategy[:NUM_NOT_RAISE] = 1/NUM_NOT_RAISE
                 legal_action = range(NUM_NOT_RAISE)
 
             util = np.zeros(NUM_PLAYER)
@@ -70,8 +75,8 @@ class PureCFR(CFR):
             if not game.is_raise_allowed():
                 regret[NUM_NOT_RAISE:] = 0
 
-            self.update_strategy(sample, regret)
-            self.strategies.append(strategy)
+            self.update_strategy(sample, regret, strategy)
+            # self.strategies.append(strategy)
             return util
 
     def run(self, max_iter, if_generate=True):

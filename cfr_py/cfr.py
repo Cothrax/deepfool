@@ -1,4 +1,4 @@
-from .game import *
+from cfr_py.game import *
 from copy import deepcopy, copy
 from collections import deque
 import numpy as np
@@ -92,7 +92,13 @@ class CFR:
         if game.is_raise_allowed():
             a = np.random.choice(range(NUM_ACTION), 1, p=sample_prob)
         else:
-            prob = sample_prob[:NUM_NOT_RAISE] / np.sum(sample_prob[:NUM_NOT_RAISE])
+            prob = sample_prob[:NUM_NOT_RAISE]
+            tot = np.sum(prob)
+            if abs(tot) < 1e-3:
+                prob = np.ones(NUM_NOT_RAISE) / NUM_NOT_RAISE
+            else:
+                prob /= tot
+
             a = np.random.choice(range(NUM_NOT_RAISE), 1, p=prob)
 
         return a
@@ -174,7 +180,11 @@ class CFR:
             legal_action = range(NUM_ACTION)
             if not game.is_raise_allowed():
                 strategy[NUM_NOT_RAISE:] = 0
-                strategy /= np.sum(strategy)
+                tot = np.sum(strategy)
+                if tot:
+                    strategy /= tot
+                else:
+                    strategy[NUM_NOT_RAISE:] = 1/NUM_NOT_RAISE
                 legal_action = range(NUM_NOT_RAISE)
 
             util = np.zeros(NUM_PLAYER)
