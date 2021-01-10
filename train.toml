@@ -21,7 +21,7 @@ title = "configuration in train mode"
 [model]
     load = true
     freeze = true
-    load_path = "./pretrain.pt"
+    load_path = "./checkpoint_70.pt"
     save_path = "./"
     save_iter = 10
 
