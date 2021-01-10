@@ -20,6 +20,9 @@ def encode(x, y):
 
 
 class TabularAdvisor:
+    """
+    Tabular model for NaiveCFR (support parallel)
+    """
     class Node:
         __slots__ = ['regret', 'strategy', 'ref']
 
@@ -59,6 +62,9 @@ class TabularAdvisor:
 
 
 class NaiveCFR(PureCFR):
+    """
+    Tabular CFR
+    """
     def __init__(self, advisor=None):
         if advisor is None:
             advisor = TabularAdvisor()

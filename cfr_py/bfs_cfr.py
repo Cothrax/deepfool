@@ -9,6 +9,11 @@ from multiprocessing import Pool, Process
 
 
 class BfsCFR(PureCFR):
+    """
+    @deprecated
+    Attempt using BFS to accelerate PureCFR (but doesn't work...)
+    """
+    
     def __init__(self, advisor):
         super().__init__(advisor)
         self.nodes = []
@@ -127,14 +132,6 @@ def test_bfs_cfr():
     cfr.run(20)
     print(time() - start)
     pass
-
-# def test_parallel_pure_cfr():
-#     start = time()
-#     adv_list = [RandomAdvisor() for i in range(8)]
-#     cfr = ParallelPureCFR(8, 2, adv_list)
-#     cfr.parallel_run()
-#     print(time() - start)
-
 
 if __name__ == '__main__':
     test_bfs_cfr()

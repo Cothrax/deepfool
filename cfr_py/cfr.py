@@ -6,6 +6,9 @@ from time import time
 
 
 class CFR:
+    """
+    The earliest version of our CFR Algo (using direct sampling)
+    """
     # __slots__ = ['sampling_choices', 'games', 'strategies',
     #             'samples', 'regrets', 'run_ptr', 'T', 'labels']
 

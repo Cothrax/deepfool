@@ -7,8 +7,10 @@ import numpy as np
 from cfr_py.cfr import CFR
 from multiprocessing import Pool, Process
 
-
 class RandomAdvisor:
+    """
+    Just for testing PureCFR
+    """
     def __init__(self):
         pass
 
@@ -24,6 +26,11 @@ class RandomAdvisor:
 
 
 class PureCFR(CFR):
+    """
+    MCCFR (External Sampling) with strategy advisor 
+    (can be tabular or nueron network)
+    """
+    
     def __init__(self, advisor):
         super().__init__()
         self.advisor = advisor
@@ -100,6 +107,9 @@ class PureCFR(CFR):
 
 
 class ParallelPureCFR:
+    """
+    Parallelized PureCFR
+    """
     def __init__(self, num_cfr, max_iter, adv_list):
         self.T = FOLD_NUM
         self.num_cfr = num_cfr
@@ -147,7 +157,6 @@ class ParallelPureCFR:
 
 
 def test_pure_cfr():
-
     start = time()
     advisor = RandomAdvisor()
     cfr = PureCFR(advisor)

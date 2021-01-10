@@ -4,10 +4,15 @@ import random
 from cfr_py.calculator import MYCFR
 
 
+# C++ based calculator
 calculator = MYCFR.Calculator()
 
 
 class Game:
+    """
+    Store all info for each state
+    """
+    
     __slots__ = ['holes', 'pubs', 'start', 'big_blind', 'bets',
                  'chips', 'folds', 'power', 'step', 'num', 'pot',
                  'cur_bet', 'player', 'history', 'num_act',

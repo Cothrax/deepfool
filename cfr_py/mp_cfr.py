@@ -6,6 +6,10 @@ from time import time
 
 
 class ParallelCFR:
+    """
+    Parallelized version of direct sampling CFR 
+    """
+    
     def __init__(self, num_cfr, max_iter):
         self.num_cfr = num_cfr
         self.max_iter = max_iter
