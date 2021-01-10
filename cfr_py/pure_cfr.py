@@ -118,8 +118,6 @@ class ParallelPureCFR:
 
     def generate_learning_samples(self):
         k = self.T // FOLD_NUM
-        print("k: {}".format(k))
-        input("check k")
         for _, v in self.mapping.items():
             regret, sample, old = v
             regret_plus = np.max(np.vstack([regret, np.zeros(NUM_ACTION)]), axis=0)
