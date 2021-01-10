@@ -1,4 +1,4 @@
-% Created 2021-01-10 Sun 15:51
+% Created 2021-01-10 Sun 19:28
 % Intended LaTeX compiler: pdflatex
 \documentclass[11pt]{article}
 \usepackage[utf8]{inputenc}
@@ -22,7 +22,35 @@
 \usepackage{fancyhdr}
 \usepackage{nopageno}
 \renewcommand{\baselinestretch}{1.0}
-\setminted{tabsize=4,breaklines=true,frame=lines,framesep=2mm,fontsize=\small}
+\setminted{tabsize=4,breaklines=true,frame=lines,framesep=2mm,fontsize=\scriptsize}
+\usepackage[figurename=Fig.]{caption}
+\newcounter{counter_exm}\setcounter{counter_exm}{1}
+\usepackage{color}
+\usepackage{listings}
+\usepackage{caption}
+\newcounter{nalg} % defines algorithm counter for chapter-level
+\renewcommand{\thenalg}{\thechapter \arabic{nalg}} %defines appearance of the algorithm counter
+\DeclareCaptionLabelFormat{algocaption}{Algorithm \thenalg} % defines a new caption label as Algorithm x.y
+\lstnewenvironment{algorithm}[1][]
+{
+\refstepcounter{nalg} %increments algorithm number
+\captionsetup{labelformat=algocaption,labelsep=colon} %defines the caption setup for: it ises label format as the declared caption label above and makes label and caption text to be separated by a ':'
+\lstset{ %this is the stype
+mathescape=true,
+frame=tB,
+numbers=left,
+numberstyle=\tiny,
+basicstyle=\small\ttfamily,
+keywordstyle=\color{black}\bfseries\em,
+keywords={,Input, Output, Return, Datatype, Function, In, If, Else, Foreach, For, While, Begin, End, Let, Swap, Sort, And, Or, Then, To,} %add the keywords you want, or load a language as Rubens explains in his comment above.
+numbers=left,
+xleftmargin=.04\textwidth,
+#1, % this is to add specific settings to an usage of this environment (for instnce, the caption and referable label)
+tabsize=4,
+literate={\ \ }{{\ }}1
+}
+}
+{}
 \date{}
 \title{}
 \hypersetup{
@@ -37,10 +65,10 @@
 \pagestyle{fancy}
 \lhead{\kaishu 中国科学院大学}
 \chead{}
-\rhead{\kaishu 2020年秋季学期~计算机体系结构研讨课}
+\rhead{\kaishu 2020年秋季学期~人工智能基础}
 
 \begin{center}
-  {\LARGE \bf 实验~13~报告}\\
+  {\LARGE \bf 德州扑克AI报告}\\
 \end{center}
 \begin{flushright}
   { \heiti
@@ -52,44 +80,153 @@
 
 
 \section{问题介绍}
-\label{sec:org585d0be}
-
+\label{sec:org5e5f5d8}
+德州扑克属于不完美信息博弈的一种，一直被人工智能学界作为测试解决不完美
+信息博弈的算法的基准游戏之一，多种基于CFR的方法已经成功解决了2人的德州
+扑克AI问题，但6人无限注的德扑AI依然是一个open的问题。在本次大作业中，
+我们结合的搜索和深度学习的方法，设计了6人无限注的德扑AI DeepFool，并在
+\texttt{neuron\_poker} 环境对模型进行了测试。
 
 \section{模型与算法}
-\label{sec:org71115aa}
-我们的德扑AI DeepFool 采用了蒙特卡洛虚拟遗憾最小化（MCCFR）与神经网络
-结合的方法，在一轮迭代中，用MCCFR与一个策略网络交互，计算遗憾值产生带
-标注的训练样本，再交给策略网络学习，通过反复迭代收敛到一个较优的策略。
-在实际测试中，通过将环境信息输入策略网络来得到决策的概率分布。
+\label{sec:org378e0a7}
+DeepFool 采用了蒙特卡洛虚拟遗憾最小化（MCCFR）与神经网络结合的方法，在
+一轮迭代中，用MCCFR与一个策略网络交互，计算遗憾值产生带标注的训练样本，
+再交给策略网络学习，通过反复迭代收敛到一个较优的策略。在实际测试中，通
+过将环境信息输入策略网络来得到决策的概率分布。
 
 \subsection{MCCFR}
-\label{sec:org1094aa0}
-\subsection{策略网络}
-\label{sec:org8b0e6fc}
-// 梁老师
+\label{sec:org8ffa411}
+算法的主要框架采用了虚拟遗憾最小化（CFR）的方法，寻找一个理论上为纳什
+均衡的博弈策略。我们将策略定义为一个已知信息 \(I\) 到合法行动的概率分布
+\(\pi\) 的映射 \(\sigma:I\to\pi\) ，已知信息 \(I\) 包含了对于当前玩家的所有
+可见信息，如手牌、公共牌、决策历史等，概率分布 \(\pi\) 的每一项 \(\pi_a\)
+代表在已知 \(I\) 的情况下采取行动 \(a\) 的可能性。
 
+CFR是一种求解纳什均衡策略的高效算法，它的一次迭代产生一颗博弈树，博弈
+树上的所有玩家都根据 策略 \(\sigma\) 行动，每个节点 \(u\) 都会得到一个每个
+玩家 \(p\) 的期望收益 \(u_{u,p}\) ，对于终止节点，收益即为游戏结束后赢得的
+筹码；对于非终止节点，收益为该节点的所有子节点的收益的概率加权
+(\ref{eq:cfr2})。树上的一个节点已知信息对应了映射 \(\sigma\) 中的一项 \(I\)
+，在这个节点上一个合法行动 \(a\) 的遗憾值 (\ref{eq:cfr3}) 等于以概率1采取
+行动 \(a\) 的期望收益减去 \(u\) （严格来讲，还需要乘上从根到该节点上，其他
+玩家决策概率贡献的乘积作为系数），每次迭代遗憾值累加后再归一化就得到了
+\(I\) 下的决策概率分布。CFR被证明可以在 \(O(N^2)\) （ \(N\) 状态空间大小）内
+收敛到一个纳什均衡的策略 \cite{neller2013introduction} 。
+
+\begin{align}
+  \label{eq:cfr1} v &=  \textsc{Next-State}(u, a) \\
+  \label{eq:cfr2} \textsc{Util}_{u,p} &= \sum_{a\in \textsc{Action}(u)} \pi_a\cdot \textsc{Util}_{v,p} \\
+  \label{eq:cfr3} \textsc{Regret}_{u,a} &\propto \textsc{Util}_{v, p}-\textsc{Util}_{u,p}
+\end{align}
+
+
+但在6人的德州扑克中，直接使用朴素的CFR会带来两个问题：
+\begin{enumerate}
+\item 博弈树太大，比如在 \texttt{neuron\_poker} 环境中，环境实际只允许每轮加注1次，
+这意味着最多有8轮迭代，环境允许的行动有6种，则一次完整的迭代需要访
+问 \(6^{6\times 8}\) 个节点，这依照当代计算机的算力是不现实的。
+\item 状态空间太大，即 \(\sigma\) 里的项数太多，需要大量的迭代才能收敛到一
+个较好的策略。
+\end{enumerate}
+
+针对这两个问题，我们的模型对朴素的CFR做出了两点改进。
+\begin{enumerate}
+\item 对于第1个问题，我们采取的蒙特卡洛采样（MC）的方法，具体来讲，对于每
+次迭代，固定一个当前玩家 \(P\) ，只在 \(P\) 决策的节点展开子树，在其余
+玩家决策的节点直接根据决策概率采样，这样搜索的规模被缩小到了
+\(6\times 6^6\) 。可以证明当采样次数足够多时，每个节点采样得到效用的期望
+等于实际的效用值 \cite{burch2012efficient} 。
+\item 对于第2个问题，我们用一个策略神经网络来拟合决策映射 \(\sigma\) ，替代
+朴素CFR采用的表格法，CFR在搜索时通过询问策略网络来遍历博弈树并计算
+遗憾值，用计算的遗憾值更新得到的节点的决策，将这些新决策作为产生的
+训练样本交给策略网络学习。
+\end{enumerate}
+
+\subsection{}
+\label{sec:orgca0f26b}
+\subsection{策略网络}
+\label{sec:orga45c8b3}
+// 梁老师
 \subsection{牌力计算}
-\label{sec:orge742ac6}
+\label{sec:org04e34d4}
 // 陈老师
 
 \section{实验细节}
-\label{sec:orgb4e5d8d}
+\label{sec:org050bede}
 \subsection{预训练策略网络}
-\label{sec:org9328ea4}
+\label{sec:org0ee1659}
+
 \subsection{基于CFR的决策历史学习}
-\label{sec:org32c6ee0}
+\label{sec:org3a66aba}
+在得到一个初步可用的网络后，再采用MCCFR来生成决策样本，但因为使用MCCFR
+时每一个节点都需要询问一次神经网络，这样生成样本的效率偏低，所以这一部
+分分为两个子步骤：
+\begin{enumerate}
+\item 通过直接采样得到大量的样本进行训练：想得到一次迭代的搜索树结构，只
+需要知道采样的节点选择了哪个行动，在这一个子步骤，MCCFR在采样时不询
+问策略网络，而直接随机选择一个节点，这样可以在完成整个搜索树的遍历
+之后，将所有要询问的样本交给策略网络，可以大大加快迭代速度。
+\item 但子步骤1的做法违背了MCCFR的原理，在理论上是不收敛的，所以在直接采
+样了一定轮数之后，还是采用标准的MCCFR进行搜索树的遍历，伪代码如下：
+
+\begin{algorithm}[caption={MCCFR训练决策网络伪代码}, label={code:mccfr}]
+Input: Current state $game$, sampling player $player$, strategy network $network$
+Output: Utility for current state $game$
+
+Function $\textsc{MCCFR}$($game, player, network$) Begin
+	If $\textsc{Status}(game) = \textsc{GAME\_OVER}$ Then
+		Return $\textsc{Payoff}(game)$
+
+	$strategy \gets$ $\textsc{Get-Strategy}(network, game)$
+	If $\textsc{Player}(game)=player$ Then Begin
+		$action \gets \textsc{Sample-Action}(strategy)$
+		$next \gets \textsc{Take-Action}(game, action)$
+		Return $\textsc{MCCFR}(next, player, network)$
+	End Else Begin
+		$cvUtil \gets [0, 0, \cdots, 0]$
+		$util \gets [0, 0,  \cdots, 0]$
+		For $action \in$ $\textsc{Legal-Action}(game)$ Begin
+			$next \gets \textsc{Take-Action}(game, action)$
+			$nextUtil \gets \textsc{MCCFR}(next, player, network)$
+			$cvUtil_{action} \gets nextUtil_{player}$
+			$util \gets util + strategy_{action}\cdot nextUtil$
+		End
+		$regret \gets cvUtil - util_{player}$
+		$\textsc{Update-Strategy}(network, regret)$
+		Return $Util$
+	End
+End
+\end{algorithm}
+\end{enumerate}
+
 \subsection{多模型集成}
-\label{sec:orga37efbc}
+\label{sec:org4acab7c}
+
 \section{结果与讨论}
-\label{sec:org67e00d4}
+\label{sec:org9cbaef5}
 \subsection{\texttt{neuron\_pocker} 环境测试结果}
-\label{sec:org5620382}
+\label{sec:org7b5b308}
+
+
+
 \subsection{存在问题与讨论}
-\label{sec:org5b913f4}
+\label{sec:orgfb245b2}
 \subsubsection{模型的收敛问题}
-\label{sec:orgaad24c7}
-\subsubsection{}
-\label{sec:org109b4fe}
-\section{参考文献}
-\label{sec:orgf73946a}
+\label{sec:org9516eb9}
+\subsubsection{\texttt{neuron\_poker} 环境的问题}
+\label{sec:org32cde1b}
+在测试中，我们发现 \texttt{neuron\_pocker} 实际存在如下问题：
+\begin{enumerate}
+\item 大作业的要求为设计6人无限注德州扑克AI，但环境中的
+\texttt{is\_raising\_allowed} 函数每轮只允许加注6次，也就是说环境中游戏最多
+进行8圈（每轮一圈加注，一圈跟注）
+\item 环境中的历史信息没有严格的时序关系，只有在某一轮每个人是否
+raise/check，也没有提供fold的决策历史和有多少人出局的信息，这给决策
+历史部分网络的设计带来的很大的困扰。
+\end{enumerate}
+
+\nocite{moravcik17_deeps}
+
+\bibliography{citations}
+\bibliographystyle{plain}
 \end{document}
