@@ -1,6 +1,6 @@
-from game import *
-from cfr import CFR
-from pure_cfr import PureCFR
+from .game import *
+from .cfr import CFR
+from .pure_cfr import PureCFR
 import random
 from time import time
 

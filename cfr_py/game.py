@@ -1,7 +1,7 @@
-from cfr_py.params import *
+from .params import *
 import numpy as np
 import random
-from cfr_py.calculator import MYCFR
+from .calculator import MYCFR
 
 
 # C++ based calculator

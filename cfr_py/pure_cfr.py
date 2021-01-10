@@ -1,10 +1,10 @@
-from cfr_py.params import *
-from cfr_py.game import *
+from .params import *
+from .game import *
 from copy import deepcopy, copy
 from queue import Queue
 from time import time
 import numpy as np
-from cfr_py.cfr import CFR
+from .cfr import CFR
 from multiprocessing import Pool, Process
 
 class RandomAdvisor:
