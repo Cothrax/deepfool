@@ -16,7 +16,7 @@
 
 `cfr_py/calculator` C++写的牌力计算器，由Swig包装，在linux可以使用，无需单独编译
 
-`agents/`为可在`neuron_poker`环境中运行的Agent
+`agents/`为可在`neuron_poker`环境中运行的Agent，`agent_cfr.py` 为我们的模型Agent
 
 ### 预训练样本生成
 #### 无history样本生成
