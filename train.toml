@@ -1,7 +1,7 @@
 title = "configuration in train mode"
 
 [general]
-    data_path = "./data"
+    data_path = "./data1/data/"
     H = 128
     batch_size = 60
     num_workers = 4
@@ -22,7 +22,7 @@ title = "configuration in train mode"
     load = false
     freeze = true
     load_path = "./checkpoint_70.pt"
-    save_path = "./"
+    save_path = "./para3/"
     save_iter = 10
 
 [hyperparameters]
