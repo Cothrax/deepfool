@@ -9,77 +9,6 @@ from cfr_py.naive_cfr import *
 
 autplay = True  # play automatically if played against keras-rl
 
- # def convert_sample(self, game):
- #     x = (game.step,
- #          int(game.win[0][game.player] * 10),
- #          int(game.win[1][game.player] * 10) if game.step >= 1 else 0,
- #          int(game.win[2][game.player] * 10) if game.step >= 2 else 0,
- #          int(game.win[3][game.player] * 10) if game.step >= 3 else 0,
- #          int(np.sum(game.if_raise[game.step]) - game.if_raise[game.step][game.player]),
- #          int(np.sum(game.if_call[game.step]) - game.if_call[game.step][game.player]),
- #          min(int((game.cur_bet - game.bets[game.step][game.player]) / game.chips[game.player] * 5), 5) if game.chips[game.player] else 5,
- #          min(int((game.pot + np.sum(game.bets)) / game.chips[game.player]), 5) if game.chips[game.player] else 5
- #     )
- #     y = (4, 11, 11, 11, 11, 6, 6, 6, 6)
- #     return encode(x, y)
-
-#
-# def encode(x, y):
-#     # ((x[0] * y[1]) + x[1]) * y[2] + x[3]
-#     ret = x[0]
-#     for xi, yi in zip(x[1:], y[1:]):
-#         ret = ret * yi + xi
-#     return ret
-#
-# NUM_ACTION = 6
-# NUM_PLAYER = 6
-
-#
-# class TabularAdvisor:
-#     class Node:
-#         __slots__ = ['regret', 'strategy', 'ref']
-#
-#         def __init__(self):
-#             self.regret = np.zeros(NUM_ACTION)
-#             self.strategy = np.ones(NUM_ACTION) / NUM_ACTION
-#             self.ref = 0
-#
-#         def get_strategy(self):
-#             return self.strategy
-#
-#         def update_strategy(self, regret):
-#             self.ref += 1
-#             self.regret += regret
-#
-#             regret_plus = np.max(np.vstack([self.regret, np.zeros(NUM_ACTION)]), axis=0)
-#             tot = np.sum(regret_plus)
-#             if abs(tot) > 1e-6:
-#                 self.strategy = regret_plus / tot
-#             else:
-#                 self.strategy = np.ones(NUM_ACTION) / NUM_ACTION
-#
-#             # print('r+', regret_plus, '\nstr', self.strategy)
-#
-#     def __init__(self):
-#         self.node_map = {}
-#
-#     def ask(self, sample):
-#         if sample not in self.node_map:
-#             return None
-#         return self.node_map[sample].get_strategy()
-#
-#     def answer(self, sample, regret):
-#         if sample not in self.node_map:
-#             self.node_map[sample] = self.Node()
-#         self.node_map[sample].update_strategy(regret)
-#
-# def encode(x, y):
-#     # ((x[0] * y[1]) + x[1]) * y[2] + x[3]
-#     ret = x[0]
-#     for xi, yi in zip(x[1:], y[1:]):
-#         ret = ret * yi + xi
-#     return ret
-
 
 class Player:
     """Mandatory class with the player methods"""
@@ -163,20 +92,19 @@ class Player:
         if_raise = np.array([info["stage_data"][i]["raises"] for i in range(4)]).astype(np.float32)
         bets = np.array([info["stage_data"][i]["contribution"] for i in range(4)]).astype(np.float32)
 
+        print('call:', if_call[step])
+        print('raise:', if_raise[step])
+        print('bets:', bets[step])
+
+        for i in range(NUM_PLAYER):
+            if bets[step][i] > BIG_BLIND / (BIG_BLIND * 100) and \
+                    if_call[step][i] < 1e-3 and \
+                    if_raise[step][i] < 1e-3:
+                if_raise[step][i] = 1
+
         me = 5
         raises = np.sum(if_raise[step]) - if_raise[step][me]
         calls = np.sum(if_call[step]) - if_call[step][me]
-        #  x = (game.step,
-        #      int(game.win[0][game.player] * 10),
-        #      int(game.win[1][game.player] * 10) if game.step >= 1 else 0,
-        #      int(game.win[2][game.player] * 10) if game.step >= 2 else 0,
-        #      int(game.win[3][game.player] * 10) if game.step >= 3 else 0,
-        #      int(np.sum(game.if_raise[game.step]) - game.if_raise[game.step][game.player]),
-        #      int(np.sum(game.if_call[game.step]) - game.if_call[game.step][game.player]),
-        #      min(int((game.cur_bet - game.bets[game.step][game.player]) / game.chips[game.player] * 5), 5) if game.chips[game.player] else 5,
-        #      min(int((game.pot + np.sum(game.bets)) / game.chips[game.player]), 5) if game.chips[game.player] else 5
-        #      )
-        # y = (4, 11, 11, 11, 11, 6, 6, 6, 6)
 
         cur_bet = np.max(bets[step])
         my_bet = bets[step][me]
@@ -203,16 +131,15 @@ class Player:
         print(y)
         print(predict)
 
-        action = Action.FOLD
-        if predict is None:
-            if Action.FOLD in set(action_space):
-                action = Action.FOLD
-            elif Action.CHECK in set(action_space):
-                action = Action.CHECK
-            elif Action.CALL in set(action_space):
-                action = Action.CALL
-            return action
-
+        # action = Action.FOLD
+        # if predict is None:
+        #     if Action.FOLD in set(action_space):
+        #         action = Action.FOLD
+        #     elif Action.CHECK in set(action_space):
+        #         action = Action.CHECK
+        #     elif Action.CALL in set(action_space):
+        #         action = Action.CALL
+        #     return action
 
         # input('check')
         # '''
@@ -231,7 +158,6 @@ class Player:
         # predict = self.model(card1, card2).squeeze().numpy()
         # print("-------------- predict ----------------------\n", predict)
 
-
         # if len(set(action_space)) == 1:
         #     return action_space[0]
         # else:
@@ -243,37 +169,33 @@ class Player:
         #     prob = prob * mask
         #     action = np.argmax(prob)
 
-        if len(set(action_space)) == 1:
-            return action_space[0]
-        elif(len(set(action_space))) > 2:
-            predict = predict
-            action = np.random.choice(len(predict), 1, p=predict)[0]
-            # action = np.argmax(predict)
+        if predict is None:
+            choices = [Action.FOLD.value, Action.CALL.value, Action.CHECK.value]
+            action = choices[0]
+            for e in choices[1:]:
+                if Action(action) not in set(action_space):
+                    action = e
+                else:
+                    break
         else:
-            action = 0 if predict[0] > predict[1] else 1
+            all_actions = np.array(range(0, NUM_ACTION))
+            allowed = {e - 1 if e >= NUM_NOT_RAISE else e for e in map(lambda x: x.value, action_space)}
+            choices = list(set(all_actions[predict > 1e-3]) & allowed)
+            if not choices:
+                action = np.random.choice(range(NUM_ACTION), 1, p=predict)[0]
+                if action == 0:
+                    while action not in set(allowed):
+                        action += 1
+                else:
+                    while action not in set(allowed) and action:
+                        action -= 1
+            else:
+                prob = predict[choices]
+                action = np.random.choice(choices, 1, p=prob / np.sum(prob))[0]
+
         if action >= 2:
             action += 1
-        elif action == 1:
-            if Action.CHECK not in set(action_space):
-                action = 2
-        elif action == 0 and Action.FOLD not in set(action_space):
-            action = 1
-
-        if action == Action.ALL_IN:
-            input('check')
-
-        '''
-        if len(set(action_space)) == 1:
-            return action_space[0]
-        elif(len(set(action_space))) > 2:
-            action = torch.argmax(predict).item()
-        else:
-            action = 0 if predict[0] > predict[1] else 1
-        if action == 2:
+        if action == 1 and Action(action) not in set(action_space):
             action += 1
-        elif action == 1:
-            if Action.CHECK not in set(action_space):
-                action = 2
-        '''
 
         return action
