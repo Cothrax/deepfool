@@ -10,7 +10,7 @@ import torch.backends.cudnn as cudnn
 from tensorboardX import SummaryWriter
 
 import data
-from model import *
+from agents.model import *
 from utils import *
 
 def main(config_path):
@@ -20,7 +20,7 @@ def main(config_path):
     writer = SummaryWriter()
 
     # model
-    model_crt  = PreTrain(6)
+    model_crt  = DF(18,6)
 
     # resume from a checkpoint
     if config["model"]["load"]:
@@ -32,8 +32,8 @@ def main(config_path):
 
     # data
     dataset_train = data.Equity_DATASET(config["general"]["data_path"])
-    dataloader_train = Data.DataLoader(dataset_train, batch_size=1, shuffle=False, pin_memory=True,
-                        num_workers=0 , drop_last=False) 
+    dataloader_train = Data.DataLoader(dataset_train, batch_size=30000, shuffle=True, pin_memory=True,
+                        num_workers=6 , drop_last=False) 
 
     # criterion
     criterion = nn.KLDivLoss(reduction="batchmean")
@@ -44,7 +44,10 @@ def main(config_path):
     ]
     optimizer = optim.Adam(params, betas=(config["hyperparameters"]["betas"], 0.999), weight_decay=config["hyperparameters"]["decay"])
     lr_scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.7)
+    if not os.path.exists(config["model"]["save_path"]):
+        os.mkdir(config["model"]["save_path"])
 
+    train_length = len(dataloader_train)
     for epoch in range(1, 1000):
         for (i, data_in) in enumerate(dataloader_train):
             train_package = [
@@ -55,7 +58,8 @@ def main(config_path):
                 writer,
                 config,
                 epoch,
-                i
+                i,
+                train_length
             ]
             train(train_package)
 
@@ -64,7 +68,7 @@ def main(config_path):
                 "model": model_crt.state_dict(),
             }, config["model"]["save_path"] + "checkpoint_{}.pt".format(epoch))
             print("save model successfully")
-        if epoch % 10 == 0:
+        if epoch % 20 == 0:
             lr_scheduler.step(epoch-config["general"]["start_epoch"])
 
 def train(package):
@@ -75,19 +79,17 @@ def train(package):
      writer,
      config,
      epoch,
-     i] = package
+     i,
+     train_length] = package
 
     model.train()
-    cards, labels = data
-    cards = cards.squeeze()
-    labels = labels.squeeze()
-    holes = cards[:,:2]
-    pubs = cards[:,2:]
+    holes , pubs, history, labels = data
     holes = holes.cuda()
     pubs = pubs.cuda()
+    history = history.cuda()
     labels = labels.cuda()
 
-    predict = model(holes, pubs)
+    predict = model(holes, pubs, history)
     predict = torch.log(predict)
 
     loss = criterion(predict, labels)
@@ -98,7 +100,7 @@ def train(package):
 
     if i % 10 == 0:
         print("iteration: {} epoch: {} loss: {:.6f}".format(i, epoch, loss))
-    writer.add_scalars("train loss", {"loss": loss}, i + epoch * 80)
+    writer.add_scalars("train loss", {"loss": loss}, i + epoch * train_length)
 
 if __name__ == "__main__":
     main("./train.toml")

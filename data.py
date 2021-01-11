@@ -88,23 +88,30 @@ class POKER_DATASET(object):
 
 class Equity_DATASET(Data.Dataset):
     def __init__(self, path):
-        self.cards = []
+        self.cards0 = []
+        self.cards1 = []
+        self.history = []
         self.probs = []
-	    self.files = glob.glob(path + "_*.pkl")
+        self.files = glob.glob(path + "*.pkl")
+
         for f in self.files:
-            samples = pkl.load(open(f, "rb"))[0]
-            cards, prob = zip(*samples)
-            self.cards.append(cards)
-            self.probs.append(prob)
-        self.cards = torch.from_numpy(np.array(self.cards)).view(-1, 7)
-        self.probs = torch.from_numpy(np.array(self.probs)).view(-1, 6)
-        print(self.cards.shape)
+            samples = pkl.load(open(f, "rb"))
+            for s in samples:
+                self.cards0.append(s[0][0])
+                self.cards1.append(s[0][1])
+                self.history.append(s[0][2])
+                self.probs.append(s[1])
+        self.cards0 = torch.LongTensor(self.cards0)
+        self.cards1 = torch.LongTensor(self.cards1)
+        self.history = torch.FloatTensor(self.history)
+        self.probs = torch.FloatTensor(self.probs)
+        print(self.cards0.shape)
+        print(self.cards1.shape)
+        print(self.history.shape)
         print(self.probs.shape)
     
     def __getitem__(self, idx):
-        st = idx*30000
-        ed = st + 30000
-        return self.cards[st:ed], self.probs[st:ed]
+        return self.cards0[idx], self.cards1[idx], self.history[idx], self.probs[idx]
     
     def __len__(self):
-        return len(self.files) * 10
+        return self.cards0.shape[0]
