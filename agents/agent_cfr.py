@@ -8,7 +8,7 @@ from gym_env.env import Action
 
 autplay = True  # play automatically if played against keras-rl
 
-
+NUM_PLAYER = 6
 class Player:
     """Mandatory class with the player methods"""
 
@@ -22,7 +22,7 @@ class Player:
         self.autoplay = True
         self.env = env
         self.model = DF(18, 6).cpu()
-        self.model.load_state_dict(torch.load("./agents/checkpoint.pt", map_location=torch.device('cpu')))
+        self.model.load_state_dict(torch.load("agents/checkpoint.pt", map_location=torch.device('cpu')))
         for p in self.model.parameters():
             p.requires_grad = False
         self.model.eval()
@@ -47,13 +47,21 @@ class Player:
         if_call = np.array([info["stage_data"][i]["calls"] for i in range(4)]).astype(np.float32)
         if_raise = np.array([info["stage_data"][i]["raises"] for i in range(4)]).astype(np.float32)
         bets = np.array([info["stage_data"][i]["contribution"] for i in range(4)]).astype(np.float32)
+
+        step = 0 if length == 0 else length - 2
+        for i in range(NUM_PLAYER):
+            if bets[step][i] > 0.01 and if_call[step][i] < 1e-3 and if_raise[step][i]:
+                if_raise[step][i] = 1
         history = np.concatenate([if_call[:,order], if_raise[:, order], bets[:, order]], axis=1)
+
 
         card1 = torch.from_numpy(card1).unsqueeze(0)
         card2 = torch.from_numpy(card2).unsqueeze(0)
         history = torch.from_numpy(history).unsqueeze(0)
 
         predict = self.model(card1, card2, history).squeeze().numpy()
+        print("----------------predcit-------------------")
+        print(predict)
 
         if len(set(action_space)) == 1:
             return action_space[0]
@@ -68,5 +76,18 @@ class Player:
             if action == 6:
                 prob = prob / prob.sum()
                 action = np.random.choice(7, 1, p=prob)
+            
+            cur_bet = np.max(bets[step])
+            my_bet = bets[step][info["player_data"]["position"]]
+            if (cur_bet - my_bet) / info["player_data"]["stack"][info["player_data"]["position"]] >= 0.9 and \
+                info["player_data"]["equity_to_river_alive"] < 0.8:
+                print("----- all in stage -----")
+                print((cur_bet - my_bet) / info["player_data"]["stack"][info["player_data"]["position"]])
+                print(info["player_data"]["equity_to_river_alive"])
+                input("check")
+                if Action.FOLD not in action_space:
+                    return Action.CHECK
+                else:
+                    return Action.FOLD
 
         return action
