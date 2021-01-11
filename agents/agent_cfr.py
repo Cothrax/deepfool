@@ -22,7 +22,7 @@ class Player:
         self.autoplay = True
         self.env = env
         self.model = DF(18, 6).cpu()
-        self.model.load_state_dict(torch.load("./checkpoint.pt", map_location=torch.device('cpu')))
+        self.model.load_state_dict(torch.load("agents/checkpoint.pt", map_location=torch.device('cpu')))
         for p in self.model.parameters():
             p.requires_grad = False
         self.model.eval()
@@ -76,5 +76,18 @@ class Player:
             if action == 6:
                 prob = prob / prob.sum()
                 action = np.random.choice(7, 1, p=prob)
+            
+            cur_bet = np.max(bets[step])
+            my_bet = bets[step][info["player_data"]["position"]]
+            if (cur_bet - my_bet) / info["player_data"]["stack"][info["player_data"]["position"]] >= 0.9 and \
+                info["player_data"]["equity_to_river_alive"] < 0.8:
+                print("----- all in stage -----")
+                print((cur_bet - my_bet) / info["player_data"]["stack"][info["player_data"]["position"]])
+                print(info["player_data"]["equity_to_river_alive"])
+                input("check")
+                if Action.FOLD not in action_space:
+                    return Action.CHECK
+                else:
+                    return Action.FOLD
 
         return action
