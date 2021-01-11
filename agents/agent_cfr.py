@@ -22,7 +22,7 @@ class Player:
         self.autoplay = True
         self.env = env
         self.model = DF(18, 6).cpu()
-        self.model.load_state_dict(torch.load("para1/checkpoint_60.pt", map_location=torch.device('cpu'))["model"])
+        self.model.load_state_dict(torch.load("./checkpoint.pt", map_location=torch.device('cpu')))
         for p in self.model.parameters():
             p.requires_grad = False
         self.model.eval()
