@@ -50,6 +50,10 @@ class TabularAdvisor:
     def __init__(self):
         self.node_map = {}
 
+    def mask_ref(self):
+        for k in self.node_map:
+            self.node_map[k].ref = -0x3f3f3f3f
+
     def ask(self, sample, training=True):
         if sample not in self.node_map:
             return np.ones(NUM_ACTION) / NUM_ACTION if training else None
@@ -106,13 +110,13 @@ class NaiveCFR(PureCFR):
                 print('dump successful')
 
     def cfr_worker(self, args):
-        max_iter = 20
+        max_iter = 40
         self.labels = []
         game, player = args
         for i in range(max_iter):
             self.cnt = 0
             self.cfr(game, player)
-            # print(i, '/', max_iter, 'cfr visit', self.cnt)
+            print(i, '/', max_iter, 'cfr visit', self.cnt)
         return self.labels
 
     def parallel_cfr(self, n_cfr):
@@ -131,19 +135,20 @@ class NaiveCFR(PureCFR):
             # start = time()
             self.parallel_cfr(n_cfr)
             # print(time() - start)
-            print(i, '/', max_iter, 'cfr visits', self.cnt, 'time', time()-start)
+            # print(i, '/', max_iter, 'cfr visits', self.cnt, 'time', time()-start)
 
             if i % DUMP_ITER == 0:
-                pickle.dump(self.advisor, open('pncfr%d.dat' % i, 'wb'))
+                pickle.dump(self.advisor, open('bncfr%d.dat' % i, 'wb'))
                 print('dump successful')
 
-        pickle.dump(self.advisor, open('pncfr.dat', 'wb'))
+        pickle.dump(self.advisor, open('bncfr.dat', 'wb'))
 
 
-class RandomizedNaiveCFR(NaiveCFR):
-    def __init__(self, given_prob):
-        super(RandomizedNaiveCFR, self).__init__()
+class BiasedNaiveCFR(NaiveCFR):
+    def __init__(self, advisor, given_prob):
+        super(BiasedNaiveCFR, self).__init__(advisor)
         self.given_prob = given_prob
+        self.biased_player = None
 
     def cfr(self, game: Game, player):
         self.cnt += 1
@@ -152,7 +157,9 @@ class RandomizedNaiveCFR(NaiveCFR):
 
         sample, strategy = self.get_strategy(game)
         if game.player != player:
-            a = self.get_sample_action(game, sample_prob=self.given_prob)
+            prob = self.given_prob if game.player == self.biased_player else strategy
+            # print(game.player in self.biased_players, prob)
+            a = self.get_sample_action(game, sample_prob=prob)
             next_game = deepcopy(game)
             next_game.act(a)
             util = self.cfr(next_game, player)
@@ -185,6 +192,11 @@ class RandomizedNaiveCFR(NaiveCFR):
             self.update_strategy(sample, regret, strategy)
             # self.strategies.append(strategy)
             return util
+
+    def parallel_cfr(self, n_cfr):
+        self.biased_player = np.random.randint(0, NUM_PLAYER-1)
+        print('biased player at', self.biased_player)
+        super(BiasedNaiveCFR, self).parallel_cfr(n_cfr)
 
 
 class SampleGenerator:
@@ -254,7 +266,7 @@ class SampleGenerator:
 def test_ncfr():
     # advisor = pickle.load(open('3pncfr80.dat', 'rb'))
     cfr = NaiveCFR(advisor=None)
-    cfr.parallel_train(6, 10)
+    cfr.parallel_train(3, 1)
     pass
 
 
@@ -266,3 +278,18 @@ def test_generator(filename):
     print('generated:', len(labels))
     return labels
 
+
+def test_randomized_ncfr():
+    advisor = pickle.load(open('cfr_py/pncfr.dat', 'rb'))
+    advisor.mask_ref()
+    cfr = BiasedNaiveCFR(advisor=advisor, given_prob=np.array([0, 0, 0, 0, 0, 1]))
+    cfr.parallel_train(6, 10)
+
+    cnt = 0
+    for k, v in advisor.node_map.items():
+        if v.ref > 0:
+            print(k, v.ref, v.regret, v.strategy)
+        cnt += 1
+    print(cnt)
+
+    pass
