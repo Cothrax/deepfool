@@ -1,4 +1,4 @@
-"""Random player"""
+>"""Random player"""
 import torch
 import numpy as np
 from .model import *
@@ -76,18 +76,4 @@ class Player:
             if action == 6:
                 prob = prob / prob.sum()
                 action = np.random.choice(7, 1, p=prob)
-            
-            cur_bet = np.max(bets[step])
-            my_bet = bets[step][info["player_data"]["position"]]
-            if (cur_bet - my_bet) / info["player_data"]["stack"][info["player_data"]["position"]] >= 0.9 and \
-                info["player_data"]["equity_to_river_alive"] < 0.8:
-                print("----- all in stage -----")
-                print((cur_bet - my_bet) / info["player_data"]["stack"][info["player_data"]["position"]])
-                print(info["player_data"]["equity_to_river_alive"])
-                input("check")
-                if Action.FOLD not in action_space:
-                    return Action.CHECK
-                else:
-                    return Action.FOLD
-
         return action
