@@ -1,5 +1,4 @@
 # 6人无限注德州扑克AI DeepFool
-注：模型尚未收敛
 
 ### 文件说明
 `train_single_gpu.py`为策略网络训练代码
