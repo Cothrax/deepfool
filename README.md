@@ -1,5 +1,9 @@
 # 6人无限注德州扑克AI DeepFool
 
+<div  align="center">    
+<img src="https://s3.ax1x.com/2021/01/13/stbb7D.png" width = "300" alt="" align="center" />
+</div>
+
 ### 文件说明
 `train_single_gpu.py`为策略网络训练代码
 
