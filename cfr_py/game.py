@@ -6,6 +6,7 @@ from .calculator import MYCFR
 
 # C++ based calculator
 calculator = MYCFR.Calculator()
+mc_iter = [10000, 500, 500, 500]
 
 
 class Game:
@@ -16,7 +17,8 @@ class Game:
     __slots__ = ['holes', 'pubs', 'start', 'big_blind', 'bets',
                  'chips', 'folds', 'power', 'step', 'num', 'pot',
                  'cur_bet', 'player', 'history', 'num_act',
-                 'if_call', 'if_raise', 'step_counter', 'win']
+                 # 'if_call', 'if_raise',
+                 'step_counter', 'win']
 
     def __init__(self, start=0):
         self.holes = -np.ones(shape=(NUM_PLAYER, 2), dtype=np.int)
@@ -28,7 +30,6 @@ class Game:
         self.bets = np.zeros(shape=(4, NUM_PLAYER), dtype=np.int)
         self.chips = np.ones(shape=NUM_PLAYER, dtype=np.int) * INIT_CHIPS
         self.folds = np.zeros(shape=NUM_PLAYER, dtype=np.bool)
-
 
         self.step = 0
         self.num = 6
@@ -42,10 +43,10 @@ class Game:
 
         self.player = (self.big_blind + 1) % NUM_PLAYER
         # self.history = [[] for _ in range(NUM_PLAYER)]
-        self.history = -np.ones(shape=(4, NUM_PLAYER))
+        # self.history = -np.ones(shape=(4, NUM_PLAYER))
 
-        self.if_call = np.zeros(shape=(4, NUM_PLAYER), dtype=np.bool)
-        self.if_raise = np.zeros(shape=(4, NUM_PLAYER), dtype=np.bool)
+        # self.if_call = np.zeros(shape=(4, NUM_PLAYER), dtype=np.bool)
+        # self.if_raise = np.zeros(shape=(4, NUM_PLAYER), dtype=np.bool)
         self.step_counter = 0
 
         self.win = np.zeros(shape=(4, NUM_PLAYER))
@@ -61,8 +62,8 @@ class Game:
         print('bets: ', self.bets)
         print('chips: ', self.chips)
         print('folds: ', self.folds)
-        print('if_call: ', self.if_call)
-        print('if_raise: ', self.if_raise)
+        # print('if_call: ', self.if_call)
+        # print('if_raise: ', self.if_raise)
 
     def generate(self):
         cards = np.random.choice(range(52), NUM_PLAYER*2+5, False)
@@ -84,8 +85,10 @@ class Game:
                     int(self.pubs[2]),
                     int(self.pubs[3]),
                     int(self.pubs[4]),
-                    j
+                    j,
+                    mc_iter[j]
                 )
+                self.win[j][i] = min(self.win[j][i], 0.999)
 
         if SHOW:
             self.debug_print()
@@ -98,6 +101,8 @@ class Game:
     def act(self, a):
         if not self.is_raise_allowed():
             assert a == FOLD or a == CHECK
+
+        assert self.chips[self.player] and not self.folds[self.player]
 
         det = self.cur_bet - self.bets[self.step][self.player]
         assert(det >= 0)
@@ -123,19 +128,21 @@ class Game:
         self.cur_bet = max(self.cur_bet, self.bets[self.step][self.player])
         self.step_counter += 1
 
-        if a == CHECK:
-            self.if_call[self.step, self.player] |= self.cur_bet > 0
-        elif a != FOLD:
-            self.if_raise[self.step, self.player] = True
+        # if a == CHECK:
+        #     self.if_call[self.step, self.player] |= self.cur_bet > 0
+        # elif a != FOLD:
+        #     self.if_raise[self.step, self.player] = True
 
-        self.history[self.step, self.player] = a
+        # self.history[self.step, self.player] = a
 
         # self.history[self.player].append(a)
-        self.player = (self.player + 1) % NUM_PLAYER
-        while self.folds[self.player]:
-            self.step_counter += 1
+        # self.player = (self.player + 1) % NUM_PLAYER
+        for _ in range(NUM_PLAYER):
             # self.history[self.player].append(-1)
             self.player = (self.player + 1) % NUM_PLAYER
+            self.step_counter += 1
+            if not self.folds[self.player] and self.chips[self.player]:
+                break
 
         if SHOW:
             print('action: %s' % a)
@@ -160,10 +167,12 @@ class Game:
         #         self.history[i].extend([-1] * det)
         self.player = self.big_blind
         self.step_counter = 0
-        while self.folds[self.player]:
+        for _ in range(NUM_PLAYER):
             self.step_counter += 1
             # self.history[self.player].append(-1)
             self.player = (self.player + 1) % NUM_PLAYER
+            if not self.folds[self.player] and self.chips[self.player]:
+                break
 
         self.step += 1
         self.cur_bet = 0
@@ -181,7 +190,7 @@ class Game:
             return NO_CHANGE
 
         self._change_state()
-        return self.step
+        return GAME_OVER if len(v) <= 1 else self.step
 
     def payoff(self):
         max_p = np.max(self.power[self.folds == 0])

@@ -10,6 +10,7 @@ from multiprocessing import Pool, Process
 from itertools import chain
 import pickle
 
+STAIRS = np.array([0, 1/64, 1/32, 1/16, 1/8, 1/4])
 
 def encode(x, y):
     # ((x[0] * y[1]) + x[1]) * y[2] + x[3]
@@ -75,17 +76,39 @@ class NaiveCFR(PureCFR):
         super().__init__(advisor)
 
     def convert_sample(self, game):
+        # x = (game.step,
+        #      int(game.win[0][game.player] * 10),
+        #      int(game.win[1][game.player] * 10) if game.step >= 1 else 0,
+        #      int(game.win[2][game.player] * 10) if game.step >= 2 else 0,
+        #      int(game.win[3][game.player] * 10) if game.step >= 3 else 0,
+        #      int(np.sum(game.if_raise[game.step]) - game.if_raise[game.step][game.player]),
+        #      int(np.sum(game.if_call[game.step]) - game.if_call[game.step][game.player]),
+        #      min(int((game.cur_bet - game.bets[game.step][game.player]) / game.chips[game.player] * 5), 5) if game.chips[game.player] else 5,
+        #      min(int((game.pot + np.sum(game.bets)) / game.chips[game.player]), 5) if game.chips[game.player] else 5
+        #      )
+        # y = (4, 11, 11, 11, 11, 6, 6, 6, 6)
+
+        delta = game.cur_bet - game.bets[game.step][game.player]
+        chip = game.chips[game.player]
+        cost = INIT_CHIPS - chip
+        real_pot = game.pot + np.sum(game.bets)
+
+        # cost / INIT_CHIPS: [0, 1/64, 1/32, 1/16, 1/8, 1/4]
+        # real_pot / chip  : [0, 1/64, 1/32, 1/16, 1/8, 1/4]
+        # delta  / chip  : [0, 1/64, 1/32, 1/16, 1/8, 1/4]
         x = (game.step,
-             int(game.win[0][game.player] * 10),
+             int(game.win[0][game.player] * 50),
              int(game.win[1][game.player] * 10) if game.step >= 1 else 0,
              int(game.win[2][game.player] * 10) if game.step >= 2 else 0,
-             int(game.win[3][game.player] * 10) if game.step >= 3 else 0,
-             int(np.sum(game.if_raise[game.step]) - game.if_raise[game.step][game.player]),
-             int(np.sum(game.if_call[game.step]) - game.if_call[game.step][game.player]),
-             min(int((game.cur_bet - game.bets[game.step][game.player]) / game.chips[game.player] * 5), 5) if game.chips[game.player] else 5,
-             min(int((game.pot + np.sum(game.bets)) / game.chips[game.player]), 5) if game.chips[game.player] else 5
+             int(game.win[3][game.player] * 5) if game.step >= 3 else 0,
+             int(game.num) - 2,
+             STAIRS.searchsorted(cost / INIT_CHIPS),
+             STAIRS.searchsorted(real_pot / chip),
+             STAIRS.searchsorted(delta / chip)
              )
-        y = (4, 11, 11, 11, 11, 6, 6, 6, 6)
+        if x[1] > 28:
+            input('check')
+        y = (4, 50, 10, 10, 5, 5, 7, 7, 7)
         return encode(x, y)
 
     def update_strategy(self, node, regret, strategy):
@@ -110,13 +133,13 @@ class NaiveCFR(PureCFR):
                 print('dump successful')
 
     def cfr_worker(self, args):
-        max_iter = 40
+        max_iter = 1000
         self.labels = []
         game, player = args
         for i in range(max_iter):
             self.cnt = 0
             self.cfr(game, player)
-            print(i, '/', max_iter, 'cfr visit', self.cnt)
+            # print(i, '/', max_iter, 'cfr visit', self.cnt)
         return self.labels
 
     def parallel_cfr(self, n_cfr):
@@ -132,10 +155,11 @@ class NaiveCFR(PureCFR):
         start = time()
         for i in range(max_iter):
             player = 5
-            # start = time()
             self.parallel_cfr(n_cfr)
-            # print(time() - start)
             # print(i, '/', max_iter, 'cfr visits', self.cnt, 'time', time()-start)
+            if i % 1 == 0:
+                print(i, '/', max_iter, 'cfr visits', self.cnt, 'time', time()-start)
+                start = time()
 
             if i % DUMP_ITER == 0:
                 pickle.dump(self.advisor, open('bncfr%d.dat' % i, 'wb'))
